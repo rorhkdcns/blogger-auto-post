@@ -23,7 +23,17 @@ CTA_SECTION = '''<div style="background:#f9f9f9; padding:25px; border-radius:10p
     <p style="color:#666; line-height:1.6;">본문의 내용에 대해 궁금한 점이나 여러분의 소중한 의견이 있다면 <b>아래 댓글</b>로 자유롭게 남겨주세요!</p>
 </div>'''
 
-creds = pickle.loads(base64.b64decode(TOKEN_BASE64))
+# 수정할 코드 (이걸로 바꾸세요!)
+if TOKEN_BASE64:
+    # 끝에 잘린 패딩(=)이 있다면 글자 수에 맞게 자동으로 채워주는 로직
+    missing_padding = len(TOKEN_BASE64) % 4
+    if missing_padding:
+        TOKEN_BASE64 += '=' * (4 - missing_padding)
+    
+    token_data = base64.b64decode(TOKEN_BASE64)
+    creds = pickle.loads(token_data)
+else:
+    raise ValueError("❌ TOKEN_PICKLE_BASE64 값이 비어있습니다.")
 client = genai.Client(api_key=API_KEY)
 
 def generate_seo_content(news_title, news_summary):
