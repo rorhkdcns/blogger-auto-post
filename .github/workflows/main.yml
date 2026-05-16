@@ -9,12 +9,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4 # v3에서 2026년 최신 규격인 v4로 업그레이드
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # v4에서 2026년 최신 규격인 v5로 업그레이드
         with:
-          python-version: '3.10'
+          python-version: '3.11' # 안정성을 위해 파이썬 버전도 3.11로 상향
 
       - name: Install dependencies
         run: |
@@ -25,4 +25,5 @@ jobs:
           API_KEY: ${{ secrets.API_KEY }}
           BLOG_ID: ${{ secrets.BLOG_ID }}
           TOKEN_PICKLE_BASE64: ${{ secrets.TOKEN_PICKLE_BASE64 }}
+          GEMINI_API_VERSION: 'v1' # 구글 내부 주소를 정식 버전으로 고정하는 강력한 방어 코드
         run: python auto_post.py
