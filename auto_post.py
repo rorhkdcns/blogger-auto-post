@@ -71,7 +71,7 @@ def generate_seo_content(news_title, news_summary):
     """
     try:
         response = client.models.generate_content(
-            model="models/gemini-1.5-flash", 
+         model="gemini-1.5-flash", 
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json"
