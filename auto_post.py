@@ -107,19 +107,19 @@ def generate_blog_content(news_data):
     [뉴스 데이터]
     {news_data}
     
-    [필수 작성 지침]
+    [필수 작성 지침 - 규격 절대 준수]
     1. 마케팅 카피라이팅 기법인 PASONA 법칙을 적용하여 자연스럽게 풀어써줘. ('파소나', 'AI', '인공지능' 단어 본문 언급 절대 금지)
     2. [가독성 절대 조건]: 한 문장이 끝날 때마다 줄바꿈(엔터)을 하고, 2~3문장마다 공백 라인(더블 엔터)을 주어라. 본문에 백틱(`) 기호나 불필요한 따옴표 문장 부호를 섞지 마라.
     3. [시각적 강조 조건]: 핵심 주식 용어, 주요 종목명, 시장 방향성 키워드를 반드시 `<b><span style="color: #e11d48;">중요키워드</span></b>` 양식으로 감싸라. 단락당 2~3개 정도가 적당하다. 중요 키워드 앞뒤에 백틱이나 불필요한 기호를 붙이지 마라.
     4. 본문은 반드시 3개의 파트로 나누고 소제목을 추출해줘.
-    5. 영문 이미지 검색 키워드를 [IMAGE_PROMPT]에 딱 2~3단어 명사로 짧게 추천해줘.
-    6. 검색용 주식 태그를 3~5개 추출해줘. (쉼표 구분)
-    7. 이 글의 핵심 내용을 130자 내외의 완성된 문장으로 요약한 '검색 설명'을 [DESCRIPTION] 뒤에 정확히 작성해줘.
+    5. 영문 이미지 검색 키워드를 [IMAGE_PROMPT]에 딱 2~3단어 명사로 짧게 추천해줘. 절대 누락하지 마라.
+    6. 검색용 주식 태그를 3~5개 추출해줘. [TAGS]: 뒤에 반드시 쉼표로 구분해서 한 줄로 출력해라.
+    7. 이 글의 핵심 내용을 130자 내외의 완성된 문장으로 요약한 '검색 설명'을 [DESCRIPTION]: 뒤에 절대 빼먹지 말고 작성해라.
     
     [출력 포맷 고정 - 형식 절대 파괴 금지]
     [TITLE]: 제목 내용
-    [TAGS]: 태그1, 태그2, 태그3
-    [DESCRIPTION]: 검색 설명 내용
+    [TAGS]: 주식투자, 재테크, 국내증시
+    [DESCRIPTION]: 여기에 검색 설명 문장을 단 한 줄로 명확하게 작성하세요.
     [IMAGE_PROMPT]: stock market index
     [SUB_TITLE_1]: 소제목1
     [BODY_1]: 내용1
@@ -155,7 +155,7 @@ def main():
     google_alerts_stock_news = fetch_google_alerts_news()
     ai_raw = generate_blog_content(google_alerts_stock_news)
     
-    # 🌟 [오류 진압 1단계] 정규식을 통한 무적의 패턴 매칭 파싱 시스템 도입
+    # 정규식 패턴 기반 분석 추출 엔진
     def re_extract(pattern, text, default=""):
         match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
         if match:
@@ -163,7 +163,7 @@ def main():
         return default
 
     title = re_extract(r'\[TITLE\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "오늘의 주식 투자 시황 핵심 분석 요약")
-    tags_raw = re_extract(r'\[TAGS\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "주식투자, 국내증시, 시황분석")
+    tags_raw = re_extract(r'\[TAGS\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "주식투자, 재테크, 시황분석")
     desc = re_extract(r'\[DESCRIPTION\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "")
     img_prompt = re_extract(r'\[IMAGE_PROMPT\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "STOCK MARKET").upper()
     
@@ -176,19 +176,12 @@ def main():
     sub3 = re_extract(r'\[SUB_TITLE_3\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "💡 향후 투자 전략 및 대응")
     body3 = re_extract(r'\[BODY_3\]\s*(.*?)$', ai_raw, "")
 
-    # 백업 방어선 작동
     if not body1:
         body1 = ai_raw
     
-    # 태그 배열 안전 세팅
-    tags = [t.strip() for t in tags_raw.split(',') if t.strip()]
-    if not tags:
-        tags = ['주식투자', '재테크', '시황분석']
-
-    # 🌟 [오류 진압 2단계] 본문에 난입한 불필요한 백틱(`) 및 따옴표 기호 강제 세척 제거
+    # 기호 클리닝 세척 함수
     def clean_symbols(text):
-        text = text.replace('`', '')
-        # 잘못 파싱되어 본문에 잔류한 프롬프트 잔여물 강제 제거
+        text = text.replace('`', '').replace('**', '').replace('__', '')
         text = re.sub(r'\[.*?\]\s*:\s*', '', text)
         return text.strip()
 
@@ -199,16 +192,21 @@ def main():
     sub2 = clean_symbols(sub2)
     sub3 = clean_symbols(sub3)
 
-    # 이미지 인코딩 및 처리
+    # 태그 유효성 검증 및 콤마 분리 방어선 구축
+    tags = [t.strip() for t in tags_raw.replace('`','').replace('**','').split(',') if t.strip()]
+    if not tags or len(tags) == 0:
+        tags = ['주식투자', '재테크', '시황분석']
+
+    # 🌟 [오류 진압 1단계] TREND: , , 유령 콤마 버그 원천 차단 알고리즘
+    valid_img_tags = [t for t in tags if t and t.strip()]
+    if len(valid_img_tags) < 3:
+        valid_img_tags += ['INVEST', 'STOCK', 'MARKET']
+        
+    dynamic_tags = f"TREND: {', '.join(valid_img_tags[:3])}".upper()
+    encoded_tags_text = urllib.parse.quote(dynamic_tags)
+
     keyword = img_prompt if img_prompt else 'STOCK MARKET'
     encoded_text = urllib.parse.quote(f"FINANCE ANALYSIS: {keyword}")
-    
-    # 상위 3개 태그 추출 및 빈값 방지 처리
-    valid_tags = [t for t in tags if t]
-    if len(valid_tags) < 3:
-        valid_tags += ['INVEST', 'STOCK', 'MARKET']
-    dynamic_tags = f"TREND: {', '.join(valid_tags[:3])}".upper()
-    encoded_tags_text = urllib.parse.quote(dynamic_tags)
     
     thumbnail_url = f"https://placehold.co/800x450/1e3a8a/ffffff/png?text={encoded_text}&font=playfair"
     inline_image_url = f"https://placehold.co/800x450/0f172a/38bdf8/png?text={encoded_tags_text}&font=roboto"
@@ -234,9 +232,11 @@ def main():
     """
 
     scheduled_publish_time = calculate_scheduled_time()
-    fallback_desc = body1[:130].strip() if body1 else '국내외 증시 시황 및 주식 시장 핵심 변동성 지표 분석.'
+    
+    # 🌟 [오류 진압 2단계] 검색 설명 빈칸 상태 강제 차단 및 세척
+    fallback_desc = body1[:120].strip() if body1 else '국내외 증시 시황 및 주식 시장 핵심 변동성 지표 분석.'
     final_desc = desc if desc else fallback_desc
-    final_desc = clean_symbols(final_desc)
+    final_desc = clean_symbols(final_desc).replace('\n', ' ')
 
     initial_data = {
         'title': title,
@@ -246,21 +246,21 @@ def main():
     }
     
     posts_service = blogger.posts()
-    print("📝 1단계: 청정화된 본문 데이터로 기본 뼈대 포스팅 생성 중...")
+    print("📝 1단계: 청정 데이터 기반 기본 포스팅 빌드 개시...")
     created_post = posts_service.insert(blogId=BLOG_ID, body=initial_data, isDraft=False).execute()
     post_id = created_post.get('id')
     
-    # 🌟 [3단계] 뼈대 빌드가 성공적으로 끝난 뒤 고유 ID 권한을 쥐고 검색 설명을 강제 집행 패치
-    print(f"🔧 2단계: 생성 완료된 글 ID({post_id})에 동기식으로 검색 설명 강제 주입 중...")
+    # 🌟 [오류 진압 3단계] 구글 버그 강제 무력화 동기화 패치 작동
+    print(f"🔧 2단계: 생성 완료된 고유 ID({post_id})에 메타 검색 설명 강제 봉인 주입...")
     patch_data = {
         'customMetaData': final_desc
     }
     
     updated_post = posts_service.patch(blogId=BLOG_ID, postId=post_id, body=patch_data).execute()
     
-    print(f"✅ [버그 박멸 완료] 완벽한 레이아웃으로 포스팅 예약 성공!")
-    print(f"⏰ 발행 예정 시간 (KST): {scheduled_publish_time}")
-    print(f"🔍 주입된 정제 검색 설명: {updated_post.get('customMetaData')}")
+    print(f"✅ [파이프라인 완전 자동화 최종 성공]")
+    print(f"⏰ 발행 예정 타임라인 (KST): {scheduled_publish_time}")
+    print(f"🔍 동기화 완료된 검색 설명: {updated_post.get('customMetaData')}")
 
 if __name__ == "__main__":
     main()
