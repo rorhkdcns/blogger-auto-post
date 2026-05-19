@@ -117,7 +117,7 @@ CTA_CODE = """
 def generate_blog_content(news_data):
     # 💡 [치트키 개조] 환경 변수를 스스로 못 찾으면, 괄호 안에 열쇠를 직접 주입해 버립니다.
     # 깃허브 yml에서 넘겨준 GEMINI_API_KEY를 직접 꺼내서 강제로 먹이는 안전장치입니다.
-    api_key_direct = os.environ.get("GEMINI_API_KEY")
+    api_key_direct = os.environ.get("API_KEY")
     
     if not api_key_direct:
         print("⚠️ 경고: GEMINI_API_KEY 환경 변수가 비어있습니다. API_KEY 확인이 필요합니다.")
