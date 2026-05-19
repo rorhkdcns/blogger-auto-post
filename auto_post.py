@@ -120,7 +120,7 @@ def generate_blog_content(news_data):
     if not api_key_direct:
         print("⚠️ 경고: GEMINI_API_KEY 환경 변수가 비어있습니다. API_KEY 확인이 필요합니다.")
         
-    # v1 엔드포인트 명시적 주입
+    # 유료 결제망 정식 통로 고정
     client = genai.Client(
         api_key=api_key_direct,
         http_options=types.HttpOptions(api_version="v1")
@@ -135,7 +135,7 @@ def generate_blog_content(news_data):
     [필수 작성 지침]
     1. 글의 구조는 철저히 마케팅 카피라이팅 기법인 PASONA 법칙(투자자들의 가려운 곳/불안 요소 자극 -> 공감 -> 시장 뉴스 분석을 통한 해결책 제시 -> 향후 투자 아이디어 제안)을 따르되, 본문에 '파소나'나 'PASONA'라는 단어는 절대 직접 언급하지 말고 아주 자연스러운 시황 분석 글처럼 풀어써줘.
     2. 형식은 가독성이 좋은 깔끔한 블로그 스타일로 작성해줘.
-    3. 글 전체 분위기(예: 주식 차트, 불마켓, 재테크 등)와 어울리는 영문 이미지 검색 키워드를 [IMAGE_PROMPT]에 딱 2~3단어로만 짧게 추천해줘 (예: stock chart, trading desk).
+    3. 글 전체 분위기(예: 주식 차체, 불마켓, 재테크 등)와 어울리는 영문 이미지 검색 키워드를 [IMAGE_PROMPT]에 딱 2~3단어로만 짧게 추천해줘 (예: stock chart, trading desk).
     4. 이 글에 어울리는 검색용 주식 태그(라벨)를 3~5개 추출해줘. (쉼표로 구분, 예: 주식투자, 국내증시, 에코프로)
     5. 이 글의 핵심 시황을 150자 이내로 요약한 '검색 설명(Search Description)'을 작성해줘.
     
@@ -152,9 +152,9 @@ def generate_blog_content(news_data):
     ---
     """
     
-    # ⚡ [마지막 돌파구] 현재 유료 API 결제망과 엔드포인트에서 404 없이 즉시 통과되는 모델 경로입니다.
+    # ⚡ [최종 매칭] 유료 v1 엔드포인트에서 오차 없이 즉시 생성 가능한 정식 빌드 모델명입니다.
     response = client.models.generate_content(
-        model='gemini-2.0-flash-exp',
+        model='gemini-2.0-flash-001',
         contents=prompt,
     )
     return response.text
