@@ -97,7 +97,7 @@ def calculate_scheduled_time():
 ADSENSE_CODE = """
 <div class="adsense-container" style="text-align:center; margin: 25px 0;">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={CLIENT}" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle" style="display:block" data-ad-client="{CLIENT}" data-ad-slot="{SLOT}" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <ins class="adsbygoogle" style="display:block" data-ad-client={CLIENT}" data-ad-slot="{SLOT}" data-ad-format="auto" data-full-width-responsive="true"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 </div>
 """.replace("{CLIENT}", GOOGLE_ADSENSE_CLIENT).replace("{SLOT}", GOOGLE_ADSENSE_SLOT)
@@ -152,9 +152,9 @@ def generate_blog_content(news_data):
     ---
     """
     
-    # ⚡ [수정 반영 완료] 기존 만료 대상이었던 'gemini-2.0-flash-001'을 무버전형 최신 표준 모델명인 'gemini-2.0-flash'로 변경했습니다.
+    # ⚡ [수정 완료] 차단된 2.0 라인업 대신 2026년 현재 정식 서비스 중인 'gemini-2.5-flash' 모델로 강제 전환합니다.
     response = client.models.generate_content(
-        model='gemini-2.0-flash',
+        model='gemini-2.5-flash',
         contents=prompt,
     )
     return response.text
