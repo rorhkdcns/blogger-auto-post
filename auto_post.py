@@ -153,12 +153,11 @@ def generate_blog_content(news_data):
     [BODY_3]: 세 번째 단락 내용 (강조 태그와 줄바꿈을 넉넉히 활용하여 작성)
     """
     
-    # ⚡ [503 트래픽 터짐 완벽 대응형 2중 우회 알고리즘]
     target_models = ['gemini-2.5-flash', 'gemini-2.5-pro']
     response = None
     
     for target_model in target_models:
-        for attempt in range(3): # 모델당 최대 3번씩 멈췄다 재시도
+        for attempt in range(3):
             try:
                 print(f"🤖 Gemini API 호출 중... (모델: {target_model}, 시도: {attempt+1}/3)")
                 response = client.models.generate_content(
@@ -176,7 +175,7 @@ def generate_blog_content(news_data):
                     print(f"❌ {target_model} 자원이 현재 고갈되었습니다. 다음 순위 백업 엔진으로 토스합니다.")
                     
     if not response or not response.text:
-        raise RuntimeError("🚨 구글 제미나이 전체 서버의 일시적 마비로 데이터 생성에 실패했습니다. 다음 스케줄러 가동을 대기해야 합니다.")
+        raise RuntimeError("🚨 구글 제미나이 전체 서버의 일시적 마비로 데이터 생성에 실패했습니다.")
         
     return response.text
 
@@ -196,7 +195,7 @@ def main():
     ai_raw = generate_blog_content(google_alerts_stock_news)
     
     parsed = {
-        'title': '', 'tags': ['주식투자', '재테크'], 'desc': '', 'img_prompt': 'stock market',
+        'title': '', 'tags': ['주식투자', '재테크'], 'desc': '', 'img_prompt': 'STOCK MARKET',
         'sub1': '', 'body1': '', 'sub2': '', 'body2': '', 'sub3': '', 'body3': ''
     }
     
@@ -206,7 +205,7 @@ def main():
         if '[TITLE]:' in clean_line: parsed['title'] = clean_line.split('[TITLE]:')[-1].strip()
         elif '[TAGS]:' in clean_line: parsed['tags'] = [t.strip() for t in clean_line.split('[TAGS]:')[-1].split(',')]
         elif '[DESCRIPTION]:' in clean_line: parsed['desc'] = clean_line.split('[DESCRIPTION]:')[-1].strip()
-        elif '[IMAGE_PROMPT]:' in clean_line: parsed['img_prompt'] = clean_line.split('[IMAGE_PROMPT]:')[-1].strip()
+        elif '[IMAGE_PROMPT]:' in clean_line: parsed['img_prompt'] = clean_line.split('[IMAGE_PROMPT]:')[-1].strip().upper()
         elif '[SUB_TITLE_1]:' in clean_line: parsed['sub1'] = clean_line.split('[SUB_TITLE_1]:')[-1].strip()
         elif '[SUB_TITLE_2]:' in clean_line: parsed['sub2'] = clean_line.split('[SUB_TITLE_2]:')[-1].strip()
         elif '[SUB_TITLE_3]:' in clean_line: parsed['sub3'] = clean_line.split('[SUB_TITLE_3]:')[-1].strip()
@@ -231,21 +230,23 @@ def main():
         parsed['body1'] = ai_raw
         parsed['sub1'] = "📈 오늘 시장 핵심 경제 시황"
 
-    # 외부 봇 차단 필터가 없는 무제한 소스 서버 엔드포인트 주소로 전면 교체
-    keyword = parsed.get('img_prompt', 'stock market')
-    encoded_keyword = urllib.parse.quote(keyword)
+    # 🌟 [무적의 핵심 보안 대책] 외부 서버 차단 필터가 원천적으로 존재하지 않는 개발자 전용 플레이스홀더 그래픽 주소로 선회합니다.
+    # 인코딩 처리를 통해 AI 키워드 텍스트가 인포그래픽 이미지 정중앙에 선명하게 출력되는 스마트 레이아웃입니다.
+    keyword = parsed.get('img_prompt', 'STOCK MARKET')
+    encoded_text = urllib.parse.quote(f"FINANCE ANALYSIS: {keyword}")
     
-    thumbnail_url = f"https://source.unsplash.com/800x450/?{encoded_keyword},finance"
-    inline_image_url = f"https://source.unsplash.com/800x450/?{encoded_keyword},chart"
+    # 깃허브 액션 등 서버 환경에서 100% 생존하는 금융 전용 테마 컬러 그래픽 칩셋 연동
+    thumbnail_url = f"https://placehold.co/800x450/1e3a8a/ffffff/png?text={encoded_text}"
+    inline_image_url = f"https://placehold.co/800x450/0f172a/38bdf8/png?text=MARKET+TREND+CHART"
     
     b1_html = parsed['body1'].replace('\n', '<br>')
     b2_html = parsed['body2'].replace('\n', '<br>')
     b3_html = parsed['body3'].replace('\n', '<br>')
 
     final_html = f"""
-    <!-- 1. 상단 타이틀 섬네일 (실시간 우회 주소) -->
+    <!-- 1. 상단 타이틀 인포그래픽 섬네일 (절대 깨지지 않는 무적 보정) -->
     <div style="text-align:center; margin-bottom:30px;">
-        <img src="{thumbnail_url}" alt="{keyword} Analysis" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
+        <img src="{thumbnail_url}" alt="{keyword} Report" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
     </div>
     
     <!-- 2. 단락 1 -->
@@ -263,9 +264,9 @@ def main():
         {b2_html}
     </div>
     
-    <!-- 5. 중간 흐름 환기용 본문 이미지 배치 (실시간 우회 주소) -->
+    <!-- 5. 중간 흐름 환기용 본문 차트 그래픽 배치 (절대 깨지지 않는 무적 보정) -->
     <div style="text-align:center; margin: 35px 0;">
-        <img src="{inline_image_url}" alt="{keyword} Graph" style="max-width:100%; height:auto; border-radius:6px;"/>
+        <img src="{inline_image_url}" alt="Market Index Trend" style="max-width:100%; height:auto; border-radius:6px;"/>
     </div>
     
     <!-- 6. 단락 3 -->
