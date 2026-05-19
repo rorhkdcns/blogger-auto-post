@@ -25,7 +25,7 @@ import google.generativeai as genai
 # =====================================================================
 # ⚙️ [설정 완료] 태현님의 구글 블로그 및 애드센스 고유 정보
 # =====================================================================
-# ⚠️ 주의: 아래 큰따옴표 안에 아까 주소창에서 찾으신 태현님의 진짜 블로그 숫자 ID를 꼭 적어주세요!
+# ⚠️ 주의: 아래 큰따옴표 안에 주소창에서 찾으신 태현님의 진짜 블로그 숫자 ID를 적어주세요!
 BLOG_ID = "347204372769511011"  
 GOOGLE_ADSENSE_CLIENT = "ca-pub-4292478378917157"
 GOOGLE_ADSENSE_SLOT = "5317754949"
@@ -170,7 +170,10 @@ def main():
     thumbnail_url = f"https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&auto=format&fit=crop"
     inline_image_url = f"https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop"
     
-    # 본문 HTML 레이아웃 최종 조립 (애드센스 상하단 샌드위치 완료)
+    # ⭐ [핵심 수정] f-string 문법 에러 회피를 위해 줄바꿈(br) 변환 작업을 f-string 블록 바깥에서 미리 처리합니다.
+    formatted_body = parsed['body'].replace('\n', '<br>')
+    
+    # 본문 HTML 레이아웃 최종 조립
     final_html = f"""
     <div style="text-align:center; margin-bottom:20px;">
         <img src="{thumbnail_url}" alt="Stock Market Analysis" style="max-width:100%; height:auto; border-radius:8px;"/>
@@ -179,7 +182,7 @@ def main():
     {ADSENSE_CODE}
     
     <div class="post-body" style="font-size:16px; line-height:1.8; color:#1e293b;">
-        {parsed['body'].replace('\n', '<br>')}
+        {formatted_body}
     </div>
     
     <div style="text-align:center; margin:30px 0;">
@@ -193,13 +196,13 @@ def main():
     # 하루 3번 스케줄링 예약 시간 계산
     scheduled_publish_time = calculate_scheduled_time()
     
-    # API 전송 데이터 패키징 (검색설명 강제 연동 완료)
+    # API 전송 데이터 패키징 (검색설명 주입)
     data = {
         'title': parsed.get('title', '오늘의 주식 투자 시황 핵심 요약'),
         'content': final_html,
         'labels': parsed.get('tags', ['주식투자', '재테크']),
         'published': scheduled_publish_time,
-        'searchDescription': parsed.get('desc', '') # 🔍 구글 블로거 검색설명 주입
+        'searchDescription': parsed.get('desc', '')
     }
     
     # 블로그로 최종 전송
