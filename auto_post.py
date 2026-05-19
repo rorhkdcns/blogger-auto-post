@@ -26,7 +26,6 @@ CTA_SECTION = '''<div style="background:#f9f9f9; padding:25px; border-radius:10p
 </div>'''
 
 # Base64로 암호화되어 보관 중인 Blogger 인증 토큰을 바이너리로 복원 및 로드
-# 줄바꿈 및 공백 에러 방지 처리 추가
 TOKEN_BASE64 = TOKEN_BASE64.strip().replace("\n", "").replace("\r", "")
 missing_padding = len(TOKEN_BASE64) % 4
 if missing_padding:
@@ -50,9 +49,9 @@ def generate_seo_content(news_title, news_summary):
     """
     
     try:
-        # ⭐ [수정 완료] 경로 누락으로 인한 404 NOT_FOUND 에러 방지를 위해 'models/'를 명시적으로 붙였습니다.
+        # ⭐ [최종 치트키] v1beta 환경에서 완벽 호환되는 2.5 최신 가성비 엔진 규격으로 매칭했습니다.
         response = client.models.generate_content(
-            model="models/gemini-1.5-flash",
+            model="gemini-2.5-flash",
             contents=prompt, 
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
