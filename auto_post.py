@@ -93,7 +93,7 @@ def calculate_scheduled_time():
     return scheduled_time.isoformat()
 
 # =====================================================================
-# 💰 [광고 & 마케팅] 구글 애드센스 및 주식 블로그용 CTA (AI 단어 제거)
+# 💰 [광고 & 마케팅] 구글 애드센스 및 주식 블로그용 CTA
 # =====================================================================
 ADSENSE_CODE = """
 <div class="adsense-container" style="text-align:center; margin: 30px 0;">
@@ -113,7 +113,7 @@ CTA_CODE = """
 """
 
 # =====================================================================
-# 🧠 [AI 프롬프트] 소제목 분할형 고급 블로그 프롬프트
+# 🧠 [AI 프롬프트] 키워드 볼드+레드 강조 지침이 추가된 최종 프롬프트
 # =====================================================================
 def generate_blog_content(news_data):
     api_key_direct = os.environ.get("API_KEY")
@@ -131,12 +131,14 @@ def generate_blog_content(news_data):
     [뉴스 데이터]
     {news_data}
     
-    [필수 작성 지침]
-    1. 마케팅 카피라이팅 기법인 PASONA 법칙을 적용하여 독자가 공감하고 몰입할 수 있도록 자연스럽게 풀어써줘. ('파소나', 'AI', '인공지능' 단어는 절대 본문에 언급 금지)
-    2. 본문은 반드시 3개의 명확한 문단으로 나누고, 각 문단 시작 전에는 해당 파트의 핵심 내용을 관통하는 '소제목'을 양식에 맞춰 작성해줘.
-    3. 글 전체의 분위기와 매칭되는 영문 이미지 검색 키워드를 [IMAGE_PROMPT]에 딱 2~3단어의 명사 형태로만 짧게 추천해줘 (예: stock chart, economy trend).
-    4. 이 글에 어울리는 검색용 주식 태그(라벨)를 3~5개 추출해줘. (쉼표로 구분, 예: 주식투자, 국내증시, 시황분석)
-    5. 이 글의 핵심 내용을 130자 내외의 완성된 문장으로 요약한 '검색 설명(Search Description)'을 [DESCRIPTION] 뒤에 정확히 작성해줘. (누락 절대 금지)
+    [필수 작성 지침 - 가독성 및 시각 효과 극대화]
+    1. 마케팅 카피라이팅 기법인 PASONA 법칙을 적용하여 자연스럽게 풀어써줘. ('파소나', 'AI', '인공지능' 단어 본문 언급 절대 금지)
+    2. [가독성 절대 조건]: 본문(BODY) 작성 시, 절대로 한 단락을 길게 통글로 붙여 쓰지 마라. 스마트폰 화면에서 가독성이 좋도록 한 문장이 끝날 때마다 줄바꿈(엔터)을 하고, 2~3문장마다 공백 라인(더블 엔터)을 주어 텍스트 레이아웃을 쾌적하게 쪼개라.
+    3. [시각적 강조 조건]: 각 본문 단락(BODY_1, BODY_2, BODY_3) 내용 중 독자가 꼭 눈여겨봐야 하는 **핵심 주식 용어, 주요 종목명, 시장 방향성 키워드**를 선정하여 반드시 HTML 태그인 `<b><span style="color: #e11d48;">중요키워드</span></b>` 양식으로 감싸서 출력해라. 과도하면 조잡해지니 단락당 2~3개 단어 정도가 강조되도록 처리해라.
+    4. 본문은 반드시 3개의 명확한 파트로 나누고, 각 파트 시작 전에는 양식에 맞춰 '소제목'을 추출해줘.
+    5. 분석할 뉴스 내용과 완벽하게 매칭되는 영문 이미지 검색 키워드를 [IMAGE_PROMPT]에 딱 2~3단어의 명사 형태로만 짧게 추천해줘. (예: stock crash, semiconductor chip, trading chart)
+    6. 이 글에 어울리는 검색용 주식 태그(라벨)를 3~5개 추출해줘. (쉼표로 구분, 예: 주식투자, 국내증시, 시황분석)
+    7. 이 글의 핵심 내용을 130자 내외의 완성된 문장으로 요약한 '검색 설명(Search Description)'을 [DESCRIPTION] 뒤에 정확히 작성해줘.
     
     [출력 포맷 고정 - 형식을 절대 깨뜨리지 마세요]
     [TITLE]: 여기에 매력적이고 직관적인 주식 제목 작성
@@ -144,11 +146,11 @@ def generate_blog_content(news_data):
     [DESCRIPTION]: 여기에 본문 핵심 요약 1문장 작성 (130자 내외)
     [IMAGE_PROMPT]: stock market index
     [SUB_TITLE_1]: 첫 번째 소제목 작성 (예: 📉 변동성 확대되는 시장, 현재 상황은?)
-    [BODY_1]: 첫 번째 단락 내용 (시장 문제 제기 및 투자자 공감대 형성)
+    [BODY_1]: 첫 번째 단락 내용 (강조 태그와 줄바꿈을 넉넉히 활용하여 작성)
     [SUB_TITLE_2]: 두 번째 소제목 작성 (예: 📊 주요 뉴스 분석과 핵심 지표 체크)
-    [BODY_2]: 두 번째 단락 내용 (제공된 뉴스 데이터를 바탕으로 한 구체적인 분석)
+    [BODY_2]: 두 번째 단락 내용 (강조 태그와 줄바꿈을 넉넉히 활용하여 작성)
     [SUB_TITLE_3]: 세 번째 소제목 작성 (예: 💡 향후 투자 전략 및 주목해야 할 포인트)
-    [BODY_3]: 세 번째 단락 내용 (결론 및 앞으로의 대응 방안, 투자 아이디어 제안)
+    [BODY_3]: 세 번째 단락 내용 (강조 태그와 줄바꿈을 넉넉히 활용하여 작성)
     """
     
     response = client.models.generate_content(
@@ -158,7 +160,7 @@ def generate_blog_content(news_data):
     return response.text
 
 # =====================================================================
-# 🛠️ [메인 엔진] 문단 파싱 및 애드센스/이미지 교차 배치 조립
+# 🛠️ [메인 엔진] 유연한 파싱 및 레이아웃 결합 구조
 # =====================================================================
 def main():
     b64_token = os.environ.get("TOKEN_PICKLE_BASE64")
@@ -172,23 +174,24 @@ def main():
     google_alerts_stock_news = fetch_google_alerts_news()
     ai_raw = generate_blog_content(google_alerts_stock_news)
     
-    # 딕셔너리 초기화
     parsed = {
-        'title': '', 'tags': ['주식투자', '재테크'], 'desc': '', 
+        'title': '', 'tags': ['주식투자', '재테크'], 'desc': '', 'img_prompt': 'stock market',
         'sub1': '', 'body1': '', 'sub2': '', 'body2': '', 'sub3': '', 'body3': ''
     }
     
-    # AI 출력을 라인별로 정밀 분석하여 매칭
+    # ⚡ [정밀 보정] 텍스트가 어디에 위치하든 키워드 포함 여부로 확실하게 잡아내는 유연한 파싱 파이프라인
     for line in ai_raw.split('\n'):
-        line_str = line.strip()
-        if line_str.startswith('[TITLE]:'): parsed['title'] = line_str.replace('[TITLE]:', '').strip()
-        elif line_str.startswith('[TAGS]:'): parsed['tags'] = [t.strip() for t in line_str.replace('[TAGS]:', '').split(',')]
-        elif line_str.startswith('[DESCRIPTION]:'): parsed['desc'] = line_str.replace('[DESCRIPTION]:', '').strip()
-        elif line_str.startswith('[SUB_TITLE_1]:'): parsed['sub1'] = line_str.replace('[SUB_TITLE_1]:', '').strip()
-        elif line_str.startswith('[SUB_TITLE_2]:'): parsed['sub2'] = line_str.replace('[SUB_TITLE_2]:', '').strip()
-        elif line_str.startswith('[SUB_TITLE_3]:'): parsed['sub3'] = line_str.replace('[SUB_TITLE_3]:', '').strip()
+        clean_line = line.strip().replace('**', '') # 마크다운 강조 찌꺼기 제거
         
-    # BODY 부분 블록 추출 정교화
+        if '[TITLE]:' in clean_line: parsed['title'] = clean_line.split('[TITLE]:')[-1].strip()
+        elif '[TAGS]:' in clean_line: parsed['tags'] = [t.strip() for t in clean_line.split('[TAGS]:')[-1].split(',')]
+        elif '[DESCRIPTION]:' in clean_line: parsed['desc'] = clean_line.split('[DESCRIPTION]:')[-1].strip()
+        elif '[IMAGE_PROMPT]:' in clean_line: parsed['img_prompt'] = clean_line.split('[IMAGE_PROMPT]:')[-1].strip()
+        elif '[SUB_TITLE_1]:' in clean_line: parsed['sub1'] = clean_line.split('[SUB_TITLE_1]:')[-1].strip()
+        elif '[SUB_TITLE_2]:' in clean_line: parsed['sub2'] = clean_line.split('[SUB_TITLE_2]:')[-1].strip()
+        elif '[SUB_TITLE_3]:' in clean_line: parsed['sub3'] = clean_line.split('[SUB_TITLE_3]:')[-1].strip()
+        
+    # 블록형 본문 데이터 추출 함수
     def extract_block(text, start_tag, end_tag=None):
         try:
             start_idx = text.find(start_tag)
@@ -205,30 +208,31 @@ def main():
     parsed['body2'] = extract_block(ai_raw, '[BODY_2]:', '[SUB_TITLE_3]')
     parsed['body3'] = extract_block(ai_raw, '[BODY_3]:')
 
-    # 만약 정밀 파싱 실패 시 예외 처리 코드
     if not parsed['body1']:
         parsed['body1'] = ai_raw
         parsed['sub1'] = "📈 오늘 시장 핵심 경제 시황"
 
-    # 고품질 이미지 에셋 (Unsplash 이미지 연동)
-    thumbnail_url = "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&auto=format&fit=crop"
-    inline_image_url = "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop"
+    # 이미지 동적 키워드 연동
+    keyword = parsed.get('img_prompt', 'stock market')
+    encoded_keyword = urllib.parse.quote(keyword)
     
-    # 엔터값을 HTML 줄바꿈 태그로 치환
+    thumbnail_url = f"https://images.unsplash.com/featured/800x450/?{encoded_keyword},finance"
+    inline_image_url = f"https://images.unsplash.com/featured/800x450/?{encoded_keyword},chart"
+    
+    # 줄바꿈 가독성 치환
     b1_html = parsed['body1'].replace('\n', '<br>')
     b2_html = parsed['body2'].replace('\n', '<br>')
     b3_html = parsed['body3'].replace('\n', '<br>')
 
-    # 🧱 [블로그 본문 HTML 구조 고도화 레이아웃 조립]
     final_html = f"""
-    <!-- 1. 상단 타이틀 섬네일 -->
+    <!-- 1. 상단 타이틀 섬네일 (매일 자동 매칭) -->
     <div style="text-align:center; margin-bottom:30px;">
-        <img src="{thumbnail_url}" alt="Market Stock Analysis" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
+        <img src="{thumbnail_url}" alt="{keyword} Analysis" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
     </div>
     
     <!-- 2. 단락 1 -->
-    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 30px; margin-bottom: 15px;">{parsed['sub1']}</h3>
-    <div class="post-p1" style="font-size:16px; line-height:1.8; color:#334155; margin-bottom: 25px;">
+    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{parsed['sub1']}</h3>
+    <div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">
         {b1_html}
     </div>
     
@@ -236,38 +240,42 @@ def main():
     {ADSENSE_CODE}
     
     <!-- 4. 단락 2 -->
-    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 30px; margin-bottom: 15px;">{parsed['sub2']}</h3>
-    <div class="post-p2" style="font-size:16px; line-height:1.8; color:#334155; margin-bottom: 25px;">
+    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{parsed['sub2']}</h3>
+    <div class="post-p2" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">
         {b2_html}
     </div>
     
-    <!-- 5. 중간 흐름 환기용 본문 이미지 배치 -->
-    <div style="text-align:center; margin: 30px 0;">
-        <img src="{inline_image_url}" alt="Financial Investment Trend" style="max-width:100%; height:auto; border-radius:6px;"/>
+    <!-- 5. 중간 흐름 환기용 본문 이미지 배치 (매일 자동 매칭) -->
+    <div style="text-align:center; margin: 35px 0;">
+        <img src="{inline_image_url}" alt="{keyword} Graph" style="max-width:100%; height:auto; border-radius:6px;"/>
     </div>
     
     <!-- 6. 단락 3 -->
-    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 30px; margin-bottom: 15px;">{parsed['sub3']}</h3>
-    <div class="post-p3" style="font-size:16px; line-height:1.8; color:#334155; margin-bottom: 25px;">
+    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{parsed['sub3']}</h3>
+    <div class="post-p3" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">
         {b3_html}
     </div>
     
     <!-- 7. 하단 애드센스 광고 배치 2 -->
     {ADSENSE_CODE}
     
-    <!-- 8. 최종 면책 조항 안내 박스 (AI 단어 전면 제거) -->
+    <!-- 8. 최종 면책 조항 안내 박스 -->
     {CTA_CODE}
     """
 
     scheduled_publish_time = calculate_scheduled_time()
     
-    # 포스팅 최종 업로드 데이터 매핑
+    # ⚡ 최종 전송 데이터 세팅
+    # AI 추출 결과가 비어있거나 실패하면 본문에서 130자를 강제로 추출해서 채우도록 완벽하게 2중 방어벽 구축
+    fallback_desc = parsed['body1'][:130].strip() if parsed['body1'] else '국내외 증시 시황 및 주식 시장 핵심 변동성 지표를 분석하여 향후 대응 전략을 공유합니다.'
+    final_desc = parsed['desc'] if parsed['desc'] else fallback_desc
+
     data = {
         'title': parsed['title'] if parsed['title'] else '오늘의 주식 투자 시황 핵심 분석 요약',
         'content': final_html,
         'labels': parsed['tags'],
         'published': scheduled_publish_time,
-        'searchDescription': parsed['desc'] if parsed['desc'] else '국내외 증시 시황 및 주식 시장 핵심 변동성 지표를 분석하여 향후 대응 전략과 합리적인 투자 아이디어를 공유합니다.'
+        'searchDescription': final_desc
     }
     
     posts = blogger.posts()
