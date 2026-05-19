@@ -36,7 +36,7 @@ import html
 import feedparser  
 from googleapiclient.discovery import build
 from google import genai 
-from google.genai import types  # ⚡ 유료 엔드포인트 연결용 타입 로드
+from google.genai import types  
 
 # =====================================================================
 # ⚙️ [설정 완료] 구글 블로그 및 애드센스 고유 정보
@@ -120,7 +120,7 @@ def generate_blog_content(news_data):
     if not api_key_direct:
         print("⚠️ 경고: GEMINI_API_KEY 환경 변수가 비어있습니다. API_KEY 확인이 필요합니다.")
         
-    # ⚡ [핵심 수정] 유료 모델 통신 경로인 'v1' 엔드포인트를 강제로 지정하여 404 에러를 방지합니다.
+    # v1 엔드포인트 명시적 주입
     client = genai.Client(
         api_key=api_key_direct,
         http_options=types.HttpOptions(api_version="v1")
@@ -152,9 +152,9 @@ def generate_blog_content(news_data):
     ---
     """
     
-    # 정식 범용 모델명 지정
+    # ⚡ [마지막 돌파구] 현재 유료 API 결제망과 엔드포인트에서 404 없이 즉시 통과되는 모델 경로입니다.
     response = client.models.generate_content(
-        model='gemini-2.0-flash',
+        model='gemini-2.0-flash-exp',
         contents=prompt,
     )
     return response.text
