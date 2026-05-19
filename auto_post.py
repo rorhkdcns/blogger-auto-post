@@ -1,24 +1,36 @@
-# 깃허브 액션 환경이나 코랩 환경에서 RSS 피드를 읽기 위한 라이브러리 자동 설치
-!pip install -q feedparser google-auth-oauthlib google-auth-httplib2 google-api-python-client
-
 import os
+import sys
+import subprocess
+
+# [1단계] 깃허브 액션 환경 내부 터미널을 제어하여 필요한 라이브러리를 자동 설치합니다.
+try:
+    import feedparser
+except ImportError:
+    subprocess.check_call([
+        sys.executable, "-m", "pip", "install", "-q", 
+        "feedparser", "google-auth-oauthlib", "google-auth-httplib2", 
+        "google-api-python-client", "google-generativeai"
+    ])
+
+# [2단계] 자동 설치가 완료된 후 실제 구동에 필요한 라이브러리들을 불러옵니다.
 import pickle
 import base64
 import datetime
 import urllib.parse
 import html
-import feedparser  # RSS 피드 파싱용 최신 라이브러리
+import feedparser  
 from googleapiclient.discovery import build
 import google.generativeai as genai
 
 # =====================================================================
 # ⚙️ [설정 완료] 태현님의 구글 블로그 및 애드센스 고유 정보
 # =====================================================================
-BLOG_ID = "347204372769511011"  # 태현님의 실제 블로그스팟 ID 숫자를 넣어주세요
+# ⚠️ 주의: 아래 큰따옴표 안에 아까 주소창에서 찾으신 태현님의 진짜 블로그 숫자 ID를 꼭 적어주세요!
+BLOG_ID = "347204372769511011"  
 GOOGLE_ADSENSE_CLIENT = "ca-pub-4292478378917157"
 GOOGLE_ADSENSE_SLOT = "5317754949"
 
-# 🔍 태현님이 제공해주신 구글 알리미 주식 투자 RSS 피드 주소
+# 🔍 구글 알리미 주식 투자 RSS 피드 주소
 GOOGLE_ALERT_RSS_URL = "https://www.google.co.kr/alerts/feeds/13793017153619247481/11360882853986229297"
 
 # Gemini API 설정 (깃허브 Secrets에 GEMINI_API_KEY 등록 필요)
@@ -28,22 +40,16 @@ genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 # 📡 [RSS 리더] 구글 알리미에서 주식 뉴스 데이터 추출 함수
 # =====================================================================
 def fetch_google_alerts_news():
-    """구글 알리미 RSS 피드에서 최신 뉴스 제목과 본문 요약을 긁어와 하나의 텍스트로 합칩니다."""
     print("📡 구글 알리미 주식 RSS 피드 수집 중...")
     feed = feedparser.parse(GOOGLE_ALERT_RSS_URL)
     
     news_content = ""
-    
-    # 수집된 뉴스 중 최신순으로 최대 5개만 골라내어 AI에게 넘겨줍니다.
     for i, entry in enumerate(feed.entries[:5]):
-        # 구글 알리미 특유의 HTML 태그 제거 및 텍스트 정제
         title = html.escape(entry.title).replace('<b>', '').replace('</b>', '')
         summary = html.escape(entry.summary).replace('<b>', '').replace('</b>', '')
-        
         news_content += f"\n[뉴스 {i+1}]\n제목: {title}\n요약: {summary}\n"
         
     if not news_content.strip():
-        # 만약 알리미에 새로 들어온 뉴스가 일시적으로 없을 때를 대비한 기본 시황 데이터
         news_content = "현재 국내외 주식 시장 시황 및 주요 거시 경제 지표 변동성 확대 현상 발생."
         
     return news_content
@@ -140,7 +146,7 @@ def main():
     creds = pickle.loads(base64.b64decode(b64_token))
     blogger = build('blogger', 'v3', credentials=creds)
     
-    # 💡 자동으로 구글 알리미 피드를 긁어서 뉴스 데이터를 채워옵니다.
+    # 자동으로 구글 알리미 피드를 긁어서 뉴스 데이터를 채워옵니다.
     google_alerts_stock_news = fetch_google_alerts_news()
     
     # AI 글 생성
@@ -193,7 +199,7 @@ def main():
         'content': final_html,
         'labels': parsed.get('tags', ['주식투자', '재테크']),
         'published': scheduled_publish_time,
-        'searchDescription': parsed.get('desc', '') # 🔍 구글 블로거 검색설명 무결점 주입 완료
+        'searchDescription': parsed.get('desc', '') # 🔍 구글 블로거 검색설명 주입
     }
     
     # 블로그로 최종 전송
