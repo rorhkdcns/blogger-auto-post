@@ -9,20 +9,20 @@ required_modules = [
     "google-auth-oauthlib", 
     "google-auth-httplib2", 
     "google-api-python-client", 
-    "google-generativeai"
+    "google-genai"  # 구형 패키지 경고와 에러를 차단하기 위해 최신 표준 패키지로 변경
 ]
 
 print("🔄 깃허브 액션 서버 환경 내 라이브러리 자동 설치 시작...")
 for module in required_modules:
     try:
-        if module == "google-generativeai":
-            import google.generativeai
+        if module == "google-genai":
+            import google.genai
         else:
             __import__(module.replace('-', '_'))
     except ImportError:
         print(f"📦 {module} 설치 중...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", module])
-        time.sleep(1) # 설치 완료 후 시스템이 인식할 수 있도록 1초간 안전 대기
+        time.sleep(1)
 
 print("✅ 모든 라이브러리 설치 및 인식 완료! 본 코드를 시작합니다.")
 print("-" * 60)
@@ -35,7 +35,7 @@ import urllib.parse
 import html
 import feedparser  
 from googleapiclient.discovery import build
-import google.generativeai as genai
+from google import genai  # 최신 구글 genai 클라이언트 로드
 
 # =====================================================================
 # ⚙️ [설정 완료] 태현님의 구글 블로그 및 애드센스 고유 정보
@@ -47,9 +47,6 @@ GOOGLE_ADSENSE_SLOT = "5317754949"
 
 # 🔍 구글 알리미 주식 투자 RSS 피드 주소
 GOOGLE_ALERT_RSS_URL = "https://www.google.co.kr/alerts/feeds/13793017153619247481/11360882853986229297"
-
-# Gemini API 설정 (깃허브 Secrets에 GEMINI_API_KEY 등록 필요)
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # =====================================================================
 # 📡 [RSS 리더] 구글 알리미에서 주식 뉴스 데이터 추출 함수
@@ -115,10 +112,11 @@ CTA_CODE = """
 """
 
 # =====================================================================
-# 🧠 [AI 프롬프트] 주식 뉴스 전용 PASONA 기법 프롬프트
+# 🧠 [AI 프롬프트] 최신 google-genai 규격 맞춤형 주식 프롬프트 함수
 # =====================================================================
 def generate_blog_content(news_data):
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # 최신 라이브러리는 깃허브 금고에 등록된 GEMINI_API_KEY를 자동으로 감지합니다.
+    client = genai.Client()
     
     prompt = f"""
     아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 글을 작성해줘.
@@ -146,7 +144,11 @@ def generate_blog_content(news_data):
     ---
     """
     
-    response = model.generate_content(prompt)
+    # 2026년 표준 gemini-2.5-flash 모델 및 최신 API 표준 호출 방식 적용
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+    )
     return response.text
 
 # =====================================================================
@@ -185,7 +187,7 @@ def main():
     thumbnail_url = f"https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&auto=format&fit=crop"
     inline_image_url = f"https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop"
     
-    # f-string 문법 에러 회피를 위해 줄바꿈(br) 변환 작업을 f-string 블록 바깥에서 미리 처리
+    # f-string 문법 에러 회피를 위해 줄바꿈 작업을 바깥에서 처리
     formatted_body = parsed['body'].replace('\n', '<br>')
     
     # 본문 HTML 레이아웃 최종 조립
