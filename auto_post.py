@@ -153,10 +153,31 @@ def generate_blog_content(news_data):
     [BODY_3]: 세 번째 단락 내용 (강조 태그와 줄바꿈을 넉넉히 활용하여 작성)
     """
     
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=prompt,
-    )
+    # ⚡ [503 트래픽 터짐 완벽 대응형 2중 우회 알고리즘]
+    target_models = ['gemini-2.5-flash', 'gemini-2.5-pro']
+    response = None
+    
+    for target_model in target_models:
+        for attempt in range(3): # 모델당 최대 3번씩 멈췄다 재시도
+            try:
+                print(f"🤖 Gemini API 호출 중... (모델: {target_model}, 시도: {attempt+1}/3)")
+                response = client.models.generate_content(
+                    model=target_model,
+                    contents=prompt,
+                )
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                print(f"⚠️ 경고: API 호출 중 일시적 지연 또는 서버 과부하 발생. (이유: {e})")
+                if attempt < 2:
+                    print("⏳ 10초 대기 후 안전하게 다시 재시도합니다...")
+                    time.sleep(10)
+                else:
+                    print(f"❌ {target_model} 자원이 현재 고갈되었습니다. 다음 순위 백업 엔진으로 토스합니다.")
+                    
+    if not response or not response.text:
+        raise RuntimeError("🚨 구글 제미나이 전체 서버의 일시적 마비로 데이터 생성에 실패했습니다. 다음 스케줄러 가동을 대기해야 합니다.")
+        
     return response.text
 
 # =====================================================================
@@ -210,7 +231,7 @@ def main():
         parsed['body1'] = ai_raw
         parsed['sub1'] = "📈 오늘 시장 핵심 경제 시황"
 
-    # 🌟 [수정 반영] 외부 봇 차단 필터가 없는 무제한 소스 서버 엔드포인트 주소로 전면 교체
+    # 외부 봇 차단 필터가 없는 무제한 소스 서버 엔드포인트 주소로 전면 교체
     keyword = parsed.get('img_prompt', 'stock market')
     encoded_keyword = urllib.parse.quote(keyword)
     
