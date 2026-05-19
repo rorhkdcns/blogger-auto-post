@@ -115,8 +115,14 @@ CTA_CODE = """
 # 🧠 [AI 프롬프트] 최신 google-genai 규격 맞춤형 주식 프롬프트 함수
 # =====================================================================
 def generate_blog_content(news_data):
-    # 최신 라이브러리는 깃허브 금고에 등록된 GEMINI_API_KEY를 자동으로 감지합니다.
-    client = genai.Client()
+    # 💡 [치트키 개조] 환경 변수를 스스로 못 찾으면, 괄호 안에 열쇠를 직접 주입해 버립니다.
+    # 깃허브 yml에서 넘겨준 GEMINI_API_KEY를 직접 꺼내서 강제로 먹이는 안전장치입니다.
+    api_key_direct = os.environ.get("GEMINI_API_KEY")
+    
+    if not api_key_direct:
+        print("⚠️ 경고: GEMINI_API_KEY 환경 변수가 비어있습니다. API_KEY 확인이 필요합니다.")
+        
+    client = genai.Client(api_key=api_key_direct) # 👈 여기에 직접 열쇠 주입!
     
     prompt = f"""
     아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 글을 작성해줘.
@@ -144,7 +150,6 @@ def generate_blog_content(news_data):
     ---
     """
     
-    # 2026년 표준 gemini-2.5-flash 모델 및 최신 API 표준 호출 방식 적용
     response = client.models.generate_content(
         model='gemini-2.5-flash',
         contents=prompt,
