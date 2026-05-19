@@ -9,7 +9,7 @@ required_modules = [
     "google-auth-oauthlib", 
     "google-auth-httplib2", 
     "google-api-python-client", 
-    "google-genai"  # 최신 표준 패키지
+    "google-genai"  
 ]
 
 print("🔄 깃허브 액션 서버 환경 내 라이브러리 자동 설치 시작...")
@@ -230,16 +230,12 @@ def main():
         parsed['body1'] = ai_raw
         parsed['sub1'] = "📈 오늘 시장 핵심 경제 시황"
 
-    # 🌟 [무적의 핵심 이미지 가독성 고도화 업데이트]
-    # 봇 차단 필터가 아예 없는 보안 안전지대 플레이스홀더 서버를 활용합니다.
     keyword = parsed.get('img_prompt', 'STOCK MARKET')
     encoded_text = urllib.parse.quote(f"FINANCE ANALYSIS: {keyword}")
     
-    # 중간 이미지 텍스트는 매일 발행되는 고유 태그 상위 3개를 결합하여 동적으로 자동 인쇄되도록 세팅합니다.
     dynamic_tags = f"TREND: {', '.join(parsed['tags'][:3])}".upper()
     encoded_tags_text = urllib.parse.quote(dynamic_tags)
     
-    # 세련된 영문 폰트(playfair, roboto) 옵션을 적용하여 디자인 퀄리티를 한 단계 끌어올립니다.
     thumbnail_url = f"https://placehold.co/800x450/1e3a8a/ffffff/png?text={encoded_text}&font=playfair"
     inline_image_url = f"https://placehold.co/800x450/0f172a/38bdf8/png?text={encoded_tags_text}&font=roboto"
     
@@ -283,12 +279,14 @@ def main():
     fallback_desc = parsed['body1'][:130].strip() if parsed['body1'] else '국내외 증시 시황 및 주식 시장 핵심 변동성 지표를 분석하여 향후 대응 전략을 공유합니다.'
     final_desc = parsed['desc'] if parsed['desc'] else fallback_desc
 
+    # 🌟 [SEO 교정 핵심 포인트] 
+    # 구글 블로거 API v3 규격에 맞게 'searchDescription' 대신 'customMetaData' 파라미터로 명칭을 전면 교체합니다.
     data = {
         'title': parsed['title'] if parsed['title'] else '오늘의 주식 투자 시황 핵심 분석 요약',
         'content': final_html,
         'labels': parsed['tags'],
         'published': scheduled_publish_time,
-        'searchDescription': final_desc
+        'customMetaData': final_desc  # ◀◀ 구글이 정상적으로 메타 디스크립션을 수집하도록 하는 치트키
     }
     
     posts = blogger.posts()
@@ -297,7 +295,7 @@ def main():
     
     print(f"✅ 주식 블로그 포스팅 최종 예약 발행 프로세스 성공!")
     print(f"⏰ 발행 시간 (KST): {scheduled_publish_time}")
-    print(f"🔍 등록된 검색 설명: {data['searchDescription']}")
+    print(f"🔍 등록된 검색 설명(메타): {data['customMetaData']}")
 
 if __name__ == "__main__":
     main()
