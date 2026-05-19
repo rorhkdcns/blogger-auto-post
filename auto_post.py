@@ -75,7 +75,10 @@ def calculate_scheduled_time():
     if not scheduled_time:
         tomorrow = today + datetime.timedelta(days=1)
         scheduled_time = datetime.datetime.combine(tomorrow, datetime.time(9, 0), tzinfo=kst)
-    return scheduled_time.isoformat()
+        
+    # 구글 API 규격에 완벽하게 일치하도록 +09:00 꼬리표 강제 보정 고정
+    iso_str = scheduled_time.strftime('%Y-%m-%dT%H:%M:%S+09:00')
+    return iso_str
 
 ADSENSE_CODE = """
 <div class="adsense-container" style="text-align:center; margin: 30px 0;">
@@ -162,74 +165,4 @@ def main():
 
     title = re_extract(r'\[TITLE\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "오늘의 주식 투자 시황 핵심 분석 요약")
     tags_raw = re_extract(r'\[TAGS\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "주식투자, 재테크, 국내증시")
-    img_prompt = re_extract(r'\[IMAGE_PROMPT\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "STOCK MARKET").upper()
-    
-    sub1 = re_extract(r'\[SUB_TITLE_1\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "📈 오늘 시장 핵심 경제 시황")
-    body1 = re_extract(r'\[BODY_1\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "")
-    
-    sub2 = re_extract(r'\[SUB_TITLE_2\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "📊 주요 분석 및 핵심 지표 체크")
-    body2 = re_extract(r'\[BODY_2\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "")
-    
-    sub3 = re_extract(r'\[SUB_TITLE_3\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "💡 향후 투자 전략 및 대응")
-    body3 = re_extract(r'\[BODY_3\]\s*(.*?)$', ai_raw, "")
-
-    if not body1:
-        body1 = ai_raw
-    
-    # 지저분한 오작동 기호 찌꺼기 완벽 클리닝
-    def clean_html_garbage(text):
-        text = text.replace('`', '').replace('**', '').replace('__', '')
-        # 잘못 튀어나온 span 잔여물 전면 삭제 피드백
-        text = text.replace('<span>', '').replace('</span>', '')
-        text = re.sub(r'<\s*span[^>]*>', '', text) 
-        text = re.sub(r'\[.*?\]\s*:\s*', '', text)
-        return text.strip()
-
-    body1 = clean_html_garbage(body1)
-    body2 = clean_html_garbage(body2)
-    body3 = clean_html_garbage(body3)
-    sub1 = clean_html_garbage(sub1)
-    sub2 = clean_html_garbage(sub2)
-    sub3 = clean_html_garbage(sub3)
-
-    tags = [t.strip() for t in tags_raw.replace('`','').replace('**','').split(',') if t.strip()]
-    if not tags:
-        tags = ['주식투자', '재테크', '국내증시']
-
-    # 🧱 고정 인포그래픽 주소 매칭 (유령 콤마 에러 원천 차단)
-    keyword = img_prompt if img_prompt else 'STOCK MARKET'
-    encoded_text = urllib.parse.quote(f"FINANCE ANALYSIS: {keyword}")
-    
-    thumbnail_url = f"https://placehold.co/800x450/1e3a8a/ffffff/png?text={encoded_text}&font=playfair"
-    inline_image_url = f"https://placehold.co/800x450/0f172a/38bdf8/png?text=FINANCE+INVESTMENT+RETAIL&font=roboto"
-    
-    b1_html = body1.replace('\n', '<br>')
-    b2_html = body2.replace('\n', '<br>')
-    b3_html = body3.replace('\n', '<br>')
-
-    final_html = f"""
-    <div style="text-align:center; margin-bottom:30px;">
-        <img src="{thumbnail_url}" alt="{keyword} Report" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
-    </div>
-    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{sub1}</h3>
-    <div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b1_html}</div>
-    {ADSENSE_CODE}
-    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{sub2}</h3>
-    <div class="post-p2" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b2_html}</div>
-    <div style="text-align:center; margin: 35px 0;"><img src="{inline_image_url}" alt="Market Index Trend" style="max-width:100%; height:auto; border-radius:6px;"/></div>
-    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{sub3}</h3>
-    <div class="post-p3" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b3_html}</div>
-    {ADSENSE_CODE}
-    {CTA_CODE}
-    """
-
-    scheduled_publish_time = calculate_scheduled_time()
-
-    post_data = {
-        'title': title,
-        'content': final_html,
-        'labels': tags,
-        'published': scheduled_publish_time
-    }
-    
-    print("📝 무결성 클린 레이아웃 기반 블로그 업로드 진행 중...")
+    img_prompt = re_extract(r'\[IMAGE_PROMPT\]\s*:\s*(.*?)(?=\n\
