@@ -152,9 +152,9 @@ def generate_blog_content(news_data):
     ---
     """
     
-    # ⚡ [최종 매칭] 유료 v1 엔드포인트에서 오차 없이 즉시 생성 가능한 정식 빌드 모델명입니다.
+    # ⚡ [수정 반영 완료] 기존 만료 대상이었던 'gemini-2.0-flash-001'을 무버전형 최신 표준 모델명인 'gemini-2.0-flash'로 변경했습니다.
     response = client.models.generate_content(
-        model='gemini-2.0-flash-001',
+        model='gemini-2.0-flash',
         contents=prompt,
     )
     return response.text
