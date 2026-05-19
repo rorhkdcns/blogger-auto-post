@@ -9,7 +9,7 @@ required_modules = [
     "google-auth-oauthlib", 
     "google-auth-httplib2", 
     "google-api-python-client", 
-    "google-genai"  # 구형 패키지 경고와 에러를 차단하기 위해 최신 표준 패키지로 변경
+    "google-genai"  # 최신 표준 패키지
 ]
 
 print("🔄 깃허브 액션 서버 환경 내 라이브러리 자동 설치 시작...")
@@ -35,12 +35,11 @@ import urllib.parse
 import html
 import feedparser  
 from googleapiclient.discovery import build
-from google import genai  # 최신 구글 genai 클라이언트 로드
+from google import genai 
 
 # =====================================================================
-# ⚙️ [설정 완료] 태현님의 구글 블로그 및 애드센스 고유 정보
+# ⚙️ [설정 완료] 구글 블로그 및 애드센스 고유 정보
 # =====================================================================
-# ⚠️ 주의: 아래 큰따옴표 안에 주소창에서 찾으신 태현님의 진짜 블로그 숫자 ID를 적어주세요!
 BLOG_ID = "347204372769511011"  
 GOOGLE_ADSENSE_CLIENT = "ca-pub-4292478378917157"
 GOOGLE_ADSENSE_SLOT = "5317754949"
@@ -92,15 +91,16 @@ def calculate_scheduled_time():
     return scheduled_time.isoformat() + "+09:00"
 
 # =====================================================================
-# 💰 [광고 & 마케팅] 태현님 전용 구글 애드센스 및 주식 블로그용 CTA
+# 💰 [광고 & 마케팅] 구글 애드센스 및 주식 블로그용 CTA (f-string 충돌 방지 처리)
 # =====================================================================
-ADSENSE_CODE = f"""
+# 자바스크립트 내부의 {} 자리에 파이썬 f-string이 작동하지 않도록 일반 문자열 포맷팅 사용
+ADSENSE_CODE = """
 <div class="adsense-container" style="text-align:center; margin: 25px 0;">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={GOOGLE_ADSENSE_CLIENT}" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle" style="display:block" data-ad-client="{GOOGLE_ADSENSE_CLIENT}" data-ad-slot="{GOOGLE_ADSENSE_SLOT}" data-ad-format="auto" data-full-width-responsive="true"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({{}});</script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={CLIENT}" crossorigin="anonymous"></script>
+    <ins class="adsbygoogle" style="display:block" data-ad-client="{CLIENT}" data-ad-slot="{SLOT}" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 </div>
-"""
+""".replace("{CLIENT}", GOOGLE_ADSENSE_CLIENT).replace("{SLOT}", GOOGLE_ADSENSE_SLOT)
 
 CTA_CODE = """
 <div class="cta-box" style="border: 2px solid #3b82f6; padding: 20px; border-radius: 10px; background-color: #f8fafc; margin-top: 40px;">
@@ -115,14 +115,12 @@ CTA_CODE = """
 # 🧠 [AI 프롬프트] 최신 google-genai 규격 맞춤형 주식 프롬프트 함수
 # =====================================================================
 def generate_blog_content(news_data):
-    # 💡 [치트키 개조] 환경 변수를 스스로 못 찾으면, 괄호 안에 열쇠를 직접 주입해 버립니다.
-    # 깃허브 yml에서 넘겨준 GEMINI_API_KEY를 직접 꺼내서 강제로 먹이는 안전장치입니다.
     api_key_direct = os.environ.get("API_KEY")
     
     if not api_key_direct:
         print("⚠️ 경고: GEMINI_API_KEY 환경 변수가 비어있습니다. API_KEY 확인이 필요합니다.")
         
-    client = genai.Client(api_key=api_key_direct) # 👈 여기에 직접 열쇠 주입!
+    client = genai.Client(api_key=api_key_direct)
     
     prompt = f"""
     아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 글을 작성해줘.
@@ -174,57 +172,58 @@ def main():
     # AI 글 생성
     ai_raw = generate_blog_content(google_alerts_stock_news)
     
-    # AI 응답 데이터 파싱
-    parsed = {}
+    # AI 응답 데이터 파싱 안전장치 마련
+    parsed = {'title': '', 'tags': ['주식투자', '재테크'], 'desc': '', 'img_prompt': 'stock market', 'body': ''}
+    
     for line in ai_raw.split('\n'):
         if line.startswith('[TITLE]:'): parsed['title'] = line.replace('[TITLE]:', '').strip()
         elif line.startswith('[TAGS]:'): parsed['tags'] = [t.strip() for t in line.replace('[TAGS]:', '').split(',')]
         elif line.startswith('[DESCRIPTION]:'): parsed['desc'] = line.replace('[DESCRIPTION]:', '').strip()
         elif line.startswith('[IMAGE_PROMPT]:'): parsed['img_prompt'] = line.replace('[IMAGE_PROMPT]:', '').strip()
         
-    body_start = ai_raw.find('[BODY]:') + 7
-    parsed['body'] = ai_raw[body_start:].strip()
+    if '[BODY]:' in ai_raw:
+        body_start = ai_raw.find('[BODY]:') + 7
+        parsed['body'] = ai_raw[body_start:].strip()
+    else:
+        parsed['body'] = ai_raw
 
-    # 🖼️ 이미지 연동 (Unsplash 오픈 이미지 풀 기반 가상 매칭)
+    # 🖼️ 이미지 연동
     keyword = parsed.get('img_prompt', 'stock market')
-    encoded_keyword = urllib.parse.quote(keyword)
     
     thumbnail_url = f"https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&auto=format&fit=crop"
     inline_image_url = f"https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop"
     
-    # f-string 문법 에러 회피를 위해 줄바꿈 작업을 바깥에서 처리
     formatted_body = parsed['body'].replace('\n', '<br>')
     
-    # 본문 HTML 레이아웃 최종 조립
-    final_html = f"""
+    # 중괄호 문법 오류 회피를 위해 레이아웃 컴포넌트를 분리 결합
+    html_top = f"""
     <div style="text-align:center; margin-bottom:20px;">
         <img src="{thumbnail_url}" alt="Stock Market Analysis" style="max-width:100%; height:auto; border-radius:8px;"/>
     </div>
+    """
     
-    {ADSENSE_CODE}
-    
+    html_mid = f"""
     <div class="post-body" style="font-size:16px; line-height:1.8; color:#1e293b;">
         {formatted_body}
     </div>
-    
     <div style="text-align:center; margin:30px 0;">
         <img src="{inline_image_url}" alt="Stock Graph" style="max-width:100%; height:auto; border-radius:6px;"/>
     </div>
-    
-    {ADSENSE_CODE}
-    {CTA_CODE}
     """
+    
+    # 최종 본문 결합 (애드센스 코드가 f-string을 거치지 않게 안전하게 조립)
+    final_html = html_top + ADSENSE_CODE + html_mid + ADSENSE_CODE + CTA_CODE
 
     # 하루 3번 스케줄링 예약 시간 계산
     scheduled_publish_time = calculate_scheduled_time()
     
-    # API 전송 데이터 패키징 (검색설명 주입)
+    # API 전송 데이터 패키징
     data = {
-        'title': parsed.get('title', '오늘의 주식 투자 시황 핵심 요약'),
+        'title': parsed.get('title') if parsed.get('title') else '오늘의 주식 투자 시황 핵심 요약',
         'content': final_html,
-        'labels': parsed.get('tags', ['주식투자', '재테크']),
+        'labels': parsed.get('tags'),
         'published': scheduled_publish_time,
-        'searchDescription': parsed.get('desc', '')
+        'searchDescription': parsed.get('desc')
     }
     
     # 블로그로 최종 전송
