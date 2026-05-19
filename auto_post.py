@@ -36,6 +36,7 @@ import html
 import feedparser  
 from googleapiclient.discovery import build
 from google import genai 
+from google.genai import types  # ⚡ API 버전 강제 고정을 위한 타입 모듈 로드
 
 # =====================================================================
 # ⚙️ [설정 완료] 구글 블로그 및 애드센스 고유 정보
@@ -93,7 +94,6 @@ def calculate_scheduled_time():
 # =====================================================================
 # 💰 [광고 & 마케팅] 구글 애드센스 및 주식 블로그용 CTA (f-string 충돌 방지 처리)
 # =====================================================================
-# 자바스크립트 내부의 {} 자리에 파이썬 f-string이 작동하지 않도록 일반 문자열 포맷팅 사용
 ADSENSE_CODE = """
 <div class="adsense-container" style="text-align:center; margin: 25px 0;">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={CLIENT}" crossorigin="anonymous"></script>
@@ -120,7 +120,11 @@ def generate_blog_content(news_data):
     if not api_key_direct:
         print("⚠️ 경고: GEMINI_API_KEY 환경 변수가 비어있습니다. API_KEY 확인이 필요합니다.")
         
-    client = genai.Client(api_key=api_key_direct)
+    # ⚡ [핵심 수정] v1beta로 이탈하는 현상을 막기 위해 클라이언트 생성 시 v1alpha를 완전히 고정합니다.
+    client = genai.Client(
+        api_key=api_key_direct,
+        http_options=types.HttpOptions(api_version="v1alpha")
+    )
     
     prompt = f"""
     아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 글을 작성해줘.
@@ -148,8 +152,9 @@ def generate_blog_content(news_data):
     ---
     """
     
+    # 정식 범용 명칭인 'gemini-2.0-flash'로 안전하게 호출합니다.
     response = client.models.generate_content(
-       model='gemini-2.0-flash-exp' ,
+        model='gemini-2.0-flash',
         contents=prompt,
     )
     return response.text
@@ -211,7 +216,7 @@ def main():
     </div>
     """
     
-    # 최종 본문 결합 (애드센스 코드가 f-string을 거치지 않게 안전하게 조립)
+    # 최종 본문 결합
     final_html = html_top + ADSENSE_CODE + html_mid + ADSENSE_CODE + CTA_CODE
 
     # 하루 3번 스케줄링 예약 시간 계산
