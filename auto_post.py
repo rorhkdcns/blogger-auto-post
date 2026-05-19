@@ -230,55 +230,51 @@ def main():
         parsed['body1'] = ai_raw
         parsed['sub1'] = "📈 오늘 시장 핵심 경제 시황"
 
-    # 🌟 [무적의 핵심 보안 대책] 외부 서버 차단 필터가 원천적으로 존재하지 않는 개발자 전용 플레이스홀더 그래픽 주소로 선회합니다.
-    # 인코딩 처리를 통해 AI 키워드 텍스트가 인포그래픽 이미지 정중앙에 선명하게 출력되는 스마트 레이아웃입니다.
+    # 🌟 [무적의 핵심 이미지 가독성 고도화 업데이트]
+    # 봇 차단 필터가 아예 없는 보안 안전지대 플레이스홀더 서버를 활용합니다.
     keyword = parsed.get('img_prompt', 'STOCK MARKET')
     encoded_text = urllib.parse.quote(f"FINANCE ANALYSIS: {keyword}")
     
-    # 깃허브 액션 등 서버 환경에서 100% 생존하는 금융 전용 테마 컬러 그래픽 칩셋 연동
-    thumbnail_url = f"https://placehold.co/800x450/1e3a8a/ffffff/png?text={encoded_text}"
-    inline_image_url = f"https://placehold.co/800x450/0f172a/38bdf8/png?text=MARKET+TREND+CHART"
+    # 중간 이미지 텍스트는 매일 발행되는 고유 태그 상위 3개를 결합하여 동적으로 자동 인쇄되도록 세팅합니다.
+    dynamic_tags = f"TREND: {', '.join(parsed['tags'][:3])}".upper()
+    encoded_tags_text = urllib.parse.quote(dynamic_tags)
+    
+    # 세련된 영문 폰트(playfair, roboto) 옵션을 적용하여 디자인 퀄리티를 한 단계 끌어올립니다.
+    thumbnail_url = f"https://placehold.co/800x450/1e3a8a/ffffff/png?text={encoded_text}&font=playfair"
+    inline_image_url = f"https://placehold.co/800x450/0f172a/38bdf8/png?text={encoded_tags_text}&font=roboto"
     
     b1_html = parsed['body1'].replace('\n', '<br>')
     b2_html = parsed['body2'].replace('\n', '<br>')
     b3_html = parsed['body3'].replace('\n', '<br>')
 
     final_html = f"""
-    <!-- 1. 상단 타이틀 인포그래픽 섬네일 (절대 깨지지 않는 무적 보정) -->
     <div style="text-align:center; margin-bottom:30px;">
         <img src="{thumbnail_url}" alt="{keyword} Report" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
     </div>
     
-    <!-- 2. 단락 1 -->
     <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{parsed['sub1']}</h3>
     <div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">
         {b1_html}
     </div>
     
-    <!-- 3. 중간 애드센스 광고 배치 1 -->
     {ADSENSE_CODE}
     
-    <!-- 4. 단락 2 -->
     <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{parsed['sub2']}</h3>
     <div class="post-p2" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">
         {b2_html}
     </div>
     
-    <!-- 5. 중간 흐름 환기용 본문 차트 그래픽 배치 (절대 깨지지 않는 무적 보정) -->
     <div style="text-align:center; margin: 35px 0;">
         <img src="{inline_image_url}" alt="Market Index Trend" style="max-width:100%; height:auto; border-radius:6px;"/>
     </div>
     
-    <!-- 6. 단락 3 -->
     <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{parsed['sub3']}</h3>
     <div class="post-p3" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">
         {b3_html}
     </div>
     
-    <!-- 7. 하단 애드센스 광고 배치 2 -->
     {ADSENSE_CODE}
     
-    <!-- 8. 최종 면책 조항 안내 박스 -->
     {CTA_CODE}
     """
 
