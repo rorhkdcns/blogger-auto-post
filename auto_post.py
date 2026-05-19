@@ -1,18 +1,33 @@
 import os
 import sys
 import subprocess
+import time
 
-# [1단계] 깃허브 액션 환경 내부 터미널을 제어하여 필요한 라이브러리를 자동 설치합니다.
-try:
-    import feedparser
-except ImportError:
-    subprocess.check_call([
-        sys.executable, "-m", "pip", "install", "-q", 
-        "feedparser", "google-auth-oauthlib", "google-auth-httplib2", 
-        "google-api-python-client", "google-generativeai"
-    ])
+# [1단계] 깃허브 액션 환경 내부에서 필요한 라이브러리를 '완벽하게' 설치 완료할 때까지 강제 대기합니다.
+required_modules = [
+    "feedparser", 
+    "google-auth-oauthlib", 
+    "google-auth-httplib2", 
+    "google-api-python-client", 
+    "google-generativeai"
+]
 
-# [2단계] 자동 설치가 완료된 후 실제 구동에 필요한 라이브러리들을 불러옵니다.
+print("🔄 깃허브 액션 서버 환경 내 라이브러리 자동 설치 시작...")
+for module in required_modules:
+    try:
+        if module == "google-generativeai":
+            import google.generativeai
+        else:
+            __import__(module.replace('-', '_'))
+    except ImportError:
+        print(f"📦 {module} 설치 중...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", module])
+        time.sleep(1) # 설치 완료 후 시스템이 인식할 수 있도록 1초간 안전 대기
+
+print("✅ 모든 라이브러리 설치 및 인식 완료! 본 코드를 시작합니다.")
+print("-" * 60)
+
+# [2단계] 설치가 완벽히 끝난 것을 확인한 후 라이브러리들을 안전하게 불러옵니다.
 import pickle
 import base64
 import datetime
@@ -170,7 +185,7 @@ def main():
     thumbnail_url = f"https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&auto=format&fit=crop"
     inline_image_url = f"https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop"
     
-    # ⭐ [핵심 수정] f-string 문법 에러 회피를 위해 줄바꿈(br) 변환 작업을 f-string 블록 바깥에서 미리 처리합니다.
+    # f-string 문법 에러 회피를 위해 줄바꿈(br) 변환 작업을 f-string 블록 바깥에서 미리 처리
     formatted_body = parsed['body'].replace('\n', '<br>')
     
     # 본문 HTML 레이아웃 최종 조립
