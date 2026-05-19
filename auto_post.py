@@ -103,14 +103,14 @@ def generate_blog_content(news_data):
         http_options=types.HttpOptions(api_version="v1")
     )
     
-    # ⚡ [문법 안전 조치] 에러를 유발하던 백틱과 특수문자 안내를 문자열에서 완전히 배제
+    # ⚡ [빨간색 볼드 지침 강화] 구글 에디터 오작동을 완벽히 비껴가는 font color 표준 태그 교체 지시
     prompt = (
         "아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 전문 시황 분석 글을 작성해줘.\n\n"
         f"[뉴스 데이터]\n{news_data}\n\n"
         "[필수 작성 지침 - 기본기 집중]\n"
         "1. 마케팅 카피라이팅 기법인 PASONA 법칙을 적용하여 자연스럽게 풀어써줘. 단, 파소나, AI, 인공지능 단어는 절대 언급 금지.\n"
         "2. 모바일 화면 최적화를 위해 한 문장이 끝날 때마다 줄바꿈을 하고, 2-3문장마다 공백 라인을 두어라. 본문에 특수 기호나 대괄호를 섞지 마라.\n"
-        "3. 본문 내용 중 가장 핵심이 되는 주식 용어, 주요 종목명, 시장 방향성 키워드를 선정하여 반드시 구글 블로그 표준 태그인 b 태그로만 감싸라. 예시: <b>중요용어</b> 양식 사용. 스팬이나 컬러 코드 스타일은 절대 쓰지 마라.\n"
+        "3. [★중요 강조 조건★]: 본문 내용 중 가장 핵심이 되는 주식 용어, 주요 종목명, 시장 방향성 키워드를 선정하여 반드시 구글 블로그가 완벽 인식하는 표준 폰트 컬러 태그 양식인 <b><font color=\"#e11d48\">중요키워드</font></b> 양식으로 감싸라. 단락당 2~3개 정도가 적당하다. 스팬(span)이나 스타일 태그는 절대 사용 금지.\n"
         "4. 본문은 반드시 3개의 파트로 나누고 소제목을 추출해줘.\n"
         "5. 영문 이미지 검색 키워드를 IMAGE_PROMPT에 딱 2-3단어 명사로 짧게 추천해줘.\n"
         "6. 검색용 주식 태그를 3-5개 추출해줘. (쉼표 구분)\n\n"
@@ -119,11 +119,11 @@ def generate_blog_content(news_data):
         "[TAGS]: 주식투자, 재테크, 국내증시\n"
         "[IMAGE_PROMPT]: stock market index\n"
         "[SUB_TITLE_1]: 소제목1\n"
-        "[BODY_1]: 내용1 (b태그 적극 활용)\n"
+        "[BODY_1]: 내용1 (반드시 <b><font color=\"#e11d48\">강조용어</font></b> 적극 활용)\n"
         "[SUB_TITLE_2]: 소제목2\n"
-        "[BODY_2]: 내용2 (b태그 적극 활용)\n"
+        "[BODY_2]: 내용2 (반드시 <b><font color=\"#e11d48\">강조용어</font></b> 적극 활용)\n"
         "[SUB_TITLE_3]: 소제목3\n"
-        "[BODY_3]: 내용3 (b태그 적극 활용)"
+        "[BODY_3]: 내용3 (반드시 <b><font color=\"#e11d48\">강조용어</font></b> 적극 활용)"
     )
     
     target_models = ['gemini-2.5-flash', 'gemini-2.5-pro']
@@ -187,6 +187,7 @@ def main():
     if not body1:
         body1 = ai_raw
     
+    # 찌꺼기 세척 로직 고도화 (강조용 font 태그는 절대 건드리지 않음)
     def clean_html_garbage(text):
         text = text.replace('`', '').replace('**', '').replace('__', '')
         text = text.replace('<span>', '').replace('</span>', '')
