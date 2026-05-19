@@ -52,7 +52,7 @@ def generate_seo_content(news_title, news_summary):
     try:
         # 모델 엔드포인트 경로 수정 및 JSON 데이터 파싱 에러 방지를 위한 스키마 강제 정의
         response = client.models.generate_content(
-            model="gemini-2.5-flash", 
+           model="gemini-1.5-flash",
             contents=prompt, 
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
