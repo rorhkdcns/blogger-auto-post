@@ -50,9 +50,9 @@ def generate_seo_content(news_title, news_summary):
     """
     
     try:
-        # 모델 엔드포인트 경로 수정 및 JSON 데이터 파싱 에러 방지를 위한 스키마 강제 정의
+        # ⭐ [수정 완료] 경로 누락으로 인한 404 NOT_FOUND 에러 방지를 위해 'models/'를 명시적으로 붙였습니다.
         response = client.models.generate_content(
-           model="gemini-1.5-flash",
+            model="models/gemini-1.5-flash",
             contents=prompt, 
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
