@@ -76,7 +76,6 @@ def calculate_scheduled_time():
         tomorrow = today + datetime.timedelta(days=1)
         scheduled_time = datetime.datetime.combine(tomorrow, datetime.time(9, 0), tzinfo=kst)
         
-    # 구글 API 규격에 완벽하게 일치하도록 +09:00 꼬리표 강제 보정 고정
     iso_str = scheduled_time.strftime('%Y-%m-%dT%H:%M:%S+09:00')
     return iso_str
 
@@ -123,46 +122,4 @@ def generate_blog_content(news_data):
     [TAGS]: 주식투자, 재테크, 국내증시
     [IMAGE_PROMPT]: stock market index
     [SUB_TITLE_1]: 소제목1
-    [BODY_1]: 내용1 (b태그와 mark태그 적극 활용)
-    [SUB_TITLE_2]: 소제목2
-    [BODY_2]: 내용2 (b태그와 mark태그 적극 활용)
-    [SUB_TITLE_3]: 소제목3
-    [BODY_3]: 내용3 (b태그와 mark태그 적극 활용)
-    """
-    
-    target_models = ['gemini-2.5-flash', 'gemini-2.5-pro']
-    for target_model in target_models:
-        for attempt in range(3):
-            try:
-                print(f"🤖 Gemini API 호출 중... (모델: {target_model}, 시도: {attempt+1}/3)")
-                response = client.models.generate_content(model=target_model, contents=prompt)
-                if response and response.text:
-                    return response.text
-            except Exception as e:
-                print(f"⚠️ 지연 발생: {e}")
-                if attempt < 2: time.sleep(10)
-                    
-    raise RuntimeError("🚨 데이터 생성 실패")
-
-def main():
-    b64_token = os.environ.get("TOKEN_PICKLE_BASE64")
-    if not b64_token:
-        print("❌ 에러: TOKEN_PICKLE_BASE64가 없습니다.")
-        return
-        
-    creds = pickle.loads(base64.b64decode(b64_token))
-    blogger = build('blogger', 'v3', credentials=creds)
-    
-    google_alerts_stock_news = fetch_google_alerts_news()
-    ai_raw = generate_blog_content(google_alerts_stock_news)
-    
-    # 정규식 패턴 분석 추출 엔진
-    def re_extract(pattern, text, default=""):
-        match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
-        if match:
-            return match.group(1).strip()
-        return default
-
-    title = re_extract(r'\[TITLE\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "오늘의 주식 투자 시황 핵심 분석 요약")
-    tags_raw = re_extract(r'\[TAGS\]\s*:\s*(.*?)(?=\n\[|$)', ai_raw, "주식투자, 재테크, 국내증시")
-    img_prompt = re_extract(r'\[IMAGE_PROMPT\]\s*:\s*(.*?)(?=\n\
+    [BODY_1]: 내용1 (b
