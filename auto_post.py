@@ -36,7 +36,7 @@ import html
 import feedparser  
 from googleapiclient.discovery import build
 from google import genai 
-from google.genai import types  # ⚡ API 버전 강제 고정을 위한 타입 모듈 로드
+from google.genai import types  # ⚡ 유료 엔드포인트 연결용 타입 로드
 
 # =====================================================================
 # ⚙️ [설정 완료] 구글 블로그 및 애드센스 고유 정보
@@ -92,7 +92,7 @@ def calculate_scheduled_time():
     return scheduled_time.isoformat() + "+09:00"
 
 # =====================================================================
-# 💰 [광고 & 마케팅] 구글 애드센스 및 주식 블로그용 CTA (f-string 충돌 방지 처리)
+# 💰 [광고 & 마케팅] 구글 애드센스 및 주식 블로그용 CTA
 # =====================================================================
 ADSENSE_CODE = """
 <div class="adsense-container" style="text-align:center; margin: 25px 0;">
@@ -120,10 +120,10 @@ def generate_blog_content(news_data):
     if not api_key_direct:
         print("⚠️ 경고: GEMINI_API_KEY 환경 변수가 비어있습니다. API_KEY 확인이 필요합니다.")
         
-    # ⚡ [핵심 수정] v1beta로 이탈하는 현상을 막기 위해 클라이언트 생성 시 v1alpha를 완전히 고정합니다.
+    # ⚡ [핵심 수정] 유료 모델 통신 경로인 'v1' 엔드포인트를 강제로 지정하여 404 에러를 방지합니다.
     client = genai.Client(
         api_key=api_key_direct,
-        http_options=types.HttpOptions(api_version="v1alpha")
+        http_options=types.HttpOptions(api_version="v1")
     )
     
     prompt = f"""
@@ -152,7 +152,7 @@ def generate_blog_content(news_data):
     ---
     """
     
-    # 정식 범용 명칭인 'gemini-2.0-flash'로 안전하게 호출합니다.
+    # 정식 범용 모델명 지정
     response = client.models.generate_content(
         model='gemini-2.0-flash',
         contents=prompt,
@@ -171,13 +171,9 @@ def main():
     creds = pickle.loads(base64.b64decode(b64_token))
     blogger = build('blogger', 'v3', credentials=creds)
     
-    # 자동으로 구글 알리미 피드를 긁어서 뉴스 데이터를 채워옵니다.
     google_alerts_stock_news = fetch_google_alerts_news()
-    
-    # AI 글 생성
     ai_raw = generate_blog_content(google_alerts_stock_news)
     
-    # AI 응답 데이터 파싱 안전장치 마련
     parsed = {'title': '', 'tags': ['주식투자', '재테크'], 'desc': '', 'img_prompt': 'stock market', 'body': ''}
     
     for line in ai_raw.split('\n'):
@@ -192,7 +188,6 @@ def main():
     else:
         parsed['body'] = ai_raw
 
-    # 🖼️ 이미지 연동
     keyword = parsed.get('img_prompt', 'stock market')
     
     thumbnail_url = f"https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&auto=format&fit=crop"
@@ -200,7 +195,6 @@ def main():
     
     formatted_body = parsed['body'].replace('\n', '<br>')
     
-    # 중괄호 문법 오류 회피를 위해 레이아웃 컴포넌트를 분리 결합
     html_top = f"""
     <div style="text-align:center; margin-bottom:20px;">
         <img src="{thumbnail_url}" alt="Stock Market Analysis" style="max-width:100%; height:auto; border-radius:8px;"/>
@@ -216,13 +210,10 @@ def main():
     </div>
     """
     
-    # 최종 본문 결합
     final_html = html_top + ADSENSE_CODE + html_mid + ADSENSE_CODE + CTA_CODE
 
-    # 하루 3번 스케줄링 예약 시간 계산
     scheduled_publish_time = calculate_scheduled_time()
     
-    # API 전송 데이터 패키징
     data = {
         'title': parsed.get('title') if parsed.get('title') else '오늘의 주식 투자 시황 핵심 요약',
         'content': final_html,
@@ -231,7 +222,6 @@ def main():
         'searchDescription': parsed.get('desc')
     }
     
-    # 블로그로 최종 전송
     posts = blogger.posts()
     request = posts.insert(blogId=BLOG_ID, body=data, isDraft=False)
     result = request.execute()
