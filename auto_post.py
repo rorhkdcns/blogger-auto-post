@@ -70,26 +70,29 @@ def fetch_google_alerts_news():
 # 🕒 [시간 설정] 하루 3번 예약 발행 시간 계산기 (9시, 13시, 18시)
 # =====================================================================
 def calculate_scheduled_time():
-    now = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9) # KST 변환
+    # 1. 기준이 되는 KST 타임존을 정의합니다.
+    kst = datetime.timezone(datetime.timedelta(hours=9))
+    now = datetime.datetime.now(kst) # 현재 KST 시간 (Offset-aware)
     today = now.date()
     
+    # 2. 비교 대상인 후보 시간들에도 동일한 kst 타임존을 주입합니다.
     candidates = [
-        datetime.datetime.combine(today, datetime.time(9, 0)),
-        datetime.datetime.combine(today, datetime.time(13, 0)),
-        datetime.datetime.combine(today, datetime.time(18, 0))
+        datetime.datetime.combine(today, datetime.time(9, 0), tzinfo=kst),
+        datetime.datetime.combine(today, datetime.time(13, 0), tzinfo=kst),
+        datetime.datetime.combine(today, datetime.time(18, 0), tzinfo=kst)
     ]
     
     scheduled_time = None
     for c in candidates:
-        if c > now:
+        if c > now:  # 이제 aware끼리의 비교이므로 에러가 나지 않습니다.
             scheduled_time = c
             break
             
     if not scheduled_time:
         tomorrow = today + datetime.timedelta(days=1)
-        scheduled_time = datetime.datetime.combine(tomorrow, datetime.time(9, 0))
+        scheduled_time = datetime.datetime.combine(tomorrow, datetime.time(9, 0), tzinfo=kst)
         
-    return scheduled_time.isoformat() + "+09:00"
+    return scheduled_time.isoformat()
 
 # =====================================================================
 # 💰 [광고 & 마케팅] 구글 애드센스 및 주식 블로그용 CTA
