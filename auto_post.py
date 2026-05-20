@@ -58,6 +58,7 @@ def fetch_google_alerts_news():
         news_content = "현재 국내외 주식 시장 시황 및 주요 거시 경제 지표 변동성 확대 현상 발생."
     return news_content
 
+# ⏰ [여기가 바뀐 부분입니다!] 9시, 13시, 16시, 20시로 예약 시간 변경 완료
 def calculate_scheduled_time():
     kst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(kst) 
@@ -65,7 +66,8 @@ def calculate_scheduled_time():
     candidates = [
         datetime.datetime.combine(today, datetime.time(9, 0), tzinfo=kst),
         datetime.datetime.combine(today, datetime.time(13, 0), tzinfo=kst),
-        datetime.datetime.combine(today, datetime.time(18, 0), tzinfo=kst)
+        datetime.datetime.combine(today, datetime.time(16, 0), tzinfo=kst),
+        datetime.datetime.combine(today, datetime.time(20, 0), tzinfo=kst)
     ]
     scheduled_time = None
     for c in candidates:
