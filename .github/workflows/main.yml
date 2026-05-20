@@ -2,7 +2,9 @@ name: Blogger Stock Auto Post
 
 on:
   schedule:
-    - cron: '0 23 * * *' # 매일 한국 시간 오전 8시에 정기 실행 (UTC 23:00)
+    # ⏰ [시간 설정 수정] 한국 시간(KST) 새벽 5시, 오전 11시, 오후 2시, 오후 6시에 실행되도록 지정
+    # 영국 표준시(UTC) 기준으로 계산하여 반영했습니다.
+    - cron: '0 20,2,5,9 * * *'
   workflow_dispatch: # Actions 탭에 수동 실행 버튼을 만들어 줍니다.
 
 jobs:
