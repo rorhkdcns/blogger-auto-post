@@ -168,6 +168,10 @@ def main():
         return default
 
     title = re_extract_line('TITLE', ai_raw, "오늘의 주식 투자 시황 핵심 분석 요약")
+    
+    # 🚨 [추가] 제목에 혹시라도 들어갈 수 있는 HTML 태그 및 마크다운 기호 강제 제거
+    title = re.sub(r'<[^>]*>', '', title)  # 모든 HTML 태그 <...> 제거
+    title = title.replace('`', '').replace('**', '').replace('__', '').strip()
     tags_raw = re_extract_line('TAGS', ai_raw, "주식투자, 재테크, 국내증시")
     img_prompt = re_extract_line('IMAGE_PROMPT', ai_raw, "STOCK MARKET").upper()
     sub1 = re_extract_line('SUB_TITLE_1', ai_raw, "📈 오늘 시장 핵심 경제 시황")
