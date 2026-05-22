@@ -103,28 +103,28 @@ CTA_CODE = """
 </div>
 """
 
-# 📊 모바일 대응 주식 계산기 4종 링킹 배너 보드 생성 (HTML 위젯)
+# 🔥 [수정 완료] href="{https://...}" 구문에서 중괄호 { }를 모두 제거했습니다.
 CALCULATOR_BOARD_CODE = f"""
 <div class="calc-board-container" style="margin: 35px 0; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; font-family: -apple-system, sans-serif;">
     <p style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #0f172a; text-align: center;">⚡ 리스크 관리를 위한 실시간 주식 계산기 모음</p>
     
     <div class="calc-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-        <a href="{https://invest.gwangchoon.com/2026/05/1_0144690541.html}" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <a href="https://invest.gwangchoon.com/2026/05/1_0144690541.html" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
             <span style="display: block; font-size: 20px; margin-bottom: 4px;">📉</span>
             <span style="display: block; font-size: 14px; font-weight: 700; color: #2563eb;">주식 물타기</span>
             <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">평단가 낮추기</span>
         </a>
-        <a href="{https://invest.gwangchoon.com/2026/05/blog-post_281.html}" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <a href="https://invest.gwangchoon.com/2026/05/blog-post_281.html" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
             <span style="display: block; font-size: 20px; margin-bottom: 4px;">💰</span>
             <span style="display: block; font-size: 14px; font-weight: 700; color: #0d9488;">익절 / 손절가</span>
             <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">단타 맞춤</span>
         </a>
-        <a href="{https://invest.gwangchoon.com/2026/05/10-1.html}" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <a href="https://invest.gwangchoon.com/2026/05/10-1.html" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
             <span style="display: block; font-size: 20px; margin-bottom: 4px;">📈</span>
             <span style="display: block; font-size: 14px; font-weight: 700; color: #4f46e5;">연복리 시뮬</span>
             <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">미래 자산 예측</span>
         </a>
-        <a href="{https://invest.gwangchoon.com/2026/05/blog-post_989.html}" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <a href="https://invest.gwangchoon.com/2026/05/blog-post_989.html" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
             <span style="display: block; font-size: 20px; margin-bottom: 4px;">🎯</span>
             <span style="display: block; font-size: 14px; font-weight: 700; color: #1e293b;">미국주식 환율계산</span>
             <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">해외주식 소득세</span>
