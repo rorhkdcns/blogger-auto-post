@@ -103,38 +103,38 @@ CTA_CODE = """
 </div>
 """
 
-# 📊 [디자인 대폭 개선] 글씨 크기 확대 및 직관적인 컬러 배경 버튼 적용 (중괄호 문제 완벽 제거)
+# 📊 [버튼 수정] 글씨가 잘리지 않고 양옆으로 꽉 차도록 폰트 크기 최적화 및 강제 한줄 처리(white-space: nowrap) 적용
 CALCULATOR_BOARD_CODE = f"""
-<div class="calc-board-container" style="margin: 40px 0; padding: 25px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<div class="calc-board-container" style="margin: 40px 0; padding: 20px 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
     <p style="margin: 0 0 20px 0; font-size: 18px; font-weight: 800; color: #0f172a; text-align: center; letter-spacing: -0.5px;">⚡ 리스크 관리를 위한 실시간 주식 계산기 모음</p>
     
-    <div class="calc-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;">
-        <!-- 1. 주식 물타기 (신뢰감을 주는 블루) -->
-        <a href="https://invest.gwangchoon.com/2026/05/1_0144690541.html" style="display: block; background: #2563eb; border-radius: 12px; padding: 18px 12px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: transform 0.1s ease;">
-            <span style="display: block; font-size: 24px; margin-bottom: 6px;">📉</span>
-            <span style="display: block; font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">주식 물타기</span>
-            <span style="display: block; font-size: 12px; color: #bfdbfe; margin-top: 4px; font-weight: 500;">평단가 낮추기</span>
+    <div class="calc-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        <!-- 1. 주식 물타기 -->
+        <a href="https://invest.gwangchoon.com/2026/05/1_0144690541.html" style="display: block; background: #2563eb; border-radius: 12px; padding: 15px 5px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); box-sizing: border-box;">
+            <span style="display: block; font-size: 26px; margin-bottom: 4px;">📉</span>
+            <span style="display: block; font-size: 17px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; white-space: nowrap;">주식 물타기</span>
+            <span style="display: block; font-size: 12px; color: #bfdbfe; margin-top: 4px; font-weight: 500; white-space: nowrap;">평단가 낮추기</span>
         </a>
         
-        <!-- 2. 익절/손절가 (시각적으로 정돈된 테일/딥민트) -->
-        <a href="https://invest.gwangchoon.com/2026/05/blog-post_281.html" style="display: block; background: #0d9488; border-radius: 12px; padding: 18px 12px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2); transition: transform 0.1s ease;">
-            <span style="display: block; font-size: 24px; margin-bottom: 6px;">💰</span>
-            <span style="display: block; font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">익절 / 손절가</span>
-            <span style="display: block; font-size: 12px; color: #ccfbf1; margin-top: 4px; font-weight: 500;">단타 맞춤 계산</span>
+        <!-- 2. 익절/손절가 -->
+        <a href="https://invest.gwangchoon.com/2026/05/blog-post_281.html" style="display: block; background: #0d9488; border-radius: 12px; padding: 15px 5px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2); box-sizing: border-box;">
+            <span style="display: block; font-size: 26px; margin-bottom: 4px;">💰</span>
+            <span style="display: block; font-size: 17px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; white-space: nowrap;">익절 / 손절가</span>
+            <span style="display: block; font-size: 12px; color: #ccfbf1; margin-top: 4px; font-weight: 500; white-space: nowrap;">단타 맞춤 계산</span>
         </a>
         
-        <!-- 3. 연복리 시뮬 (자산 성장을 뜻하는 딥퍼플) -->
-        <a href="https://invest.gwangchoon.com/2026/05/10-1.html" style="display: block; background: #4f46e5; border-radius: 12px; padding: 18px 12px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); transition: transform 0.1s ease;">
-            <span style="display: block; font-size: 24px; margin-bottom: 6px;">📈</span>
-            <span style="display: block; font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">연복리 시뮬</span>
-            <span style="display: block; font-size: 12px; color: #e0e7ff; margin-top: 4px; font-weight: 500;">미래 자산 예측</span>
+        <!-- 3. 연복리 시뮬 -->
+        <a href="https://invest.gwangchoon.com/2026/05/10-1.html" style="display: block; background: #4f46e5; border-radius: 12px; padding: 15px 5px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); box-sizing: border-box;">
+            <span style="display: block; font-size: 26px; margin-bottom: 4px;">📈</span>
+            <span style="display: block; font-size: 17px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; white-space: nowrap;">연복리 시뮬</span>
+            <span style="display: block; font-size: 12px; color: #e0e7ff; margin-top: 4px; font-weight: 500; white-space: nowrap;">미래 자산 예측</span>
         </a>
         
-        <!-- 4. 미국주식 환율계산 (고급스러운 슬레이트 차콜) -->
-        <a href="https://invest.gwangchoon.com/2026/05/blog-post_989.html" style="display: block; background: #334155; border-radius: 12px; padding: 18px 12px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(51, 65, 85, 0.2); transition: transform 0.1s ease;">
-            <span style="display: block; font-size: 24px; margin-bottom: 6px;">🎯</span>
-            <span style="display: block; font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">미국주식 환율</span>
-            <span style="display: block; font-size: 12px; color: #cbd5e1; margin-top: 4px; font-weight: 500;">해외주식 소득세</span>
+        <!-- 4. 미국주식 환율계산 -->
+        <a href="https://invest.gwangchoon.com/2026/05/blog-post_989.html" style="display: block; background: #334155; border-radius: 12px; padding: 15px 5px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(51, 65, 85, 0.2); box-sizing: border-box;">
+            <span style="display: block; font-size: 26px; margin-bottom: 4px;">🎯</span>
+            <span style="display: block; font-size: 16px; font-weight: 900; color: #ffffff; letter-spacing: -0.7px; white-space: nowrap;">미국주식 환율</span>
+            <span style="display: block; font-size: 11px; color: #cbd5e1; margin-top: 4px; font-weight: 500; white-space: nowrap;">해외주식 소득세</span>
         </a>
     </div>
 </div>
