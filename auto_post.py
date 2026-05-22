@@ -46,6 +46,12 @@ GOOGLE_ADSENSE_CLIENT = "ca-pub-4292478378917157"
 GOOGLE_ADSENSE_SLOT = "5317754949"
 GOOGLE_ALERT_RSS_URL = "https://www.google.co.kr/alerts/feeds/13793017153619247481/11360882853986229297"
 
+# 🔗 [중요] 직접 올리신 주식 계산기 4종의 블로그스팟 주소를 여기에 넣으세요!
+URL_물타기 = "https://본인블로그주소/물타기-계산기-글주소.html"
+URL_매수수량 = "https://본인블로그주소/매수수량-계산기-글주소.html"
+URL_복리 = "https://본인블로그주소/복리-계산기-글주소.html"
+URL_손절익절 = "https://본인블로그주소/손절익절-계산기-글주소.html"
+
 def fetch_google_alerts_news():
     print("📡 구글 알리미 주식 RSS 피드 수집 중...")
     feed = feedparser.parse(GOOGLE_ALERT_RSS_URL)
@@ -58,7 +64,6 @@ def fetch_google_alerts_news():
         news_content = "현재 국내외 주식 시장 시황 및 주요 거시 경제 지표 변동성 확대 현상 발생."
     return news_content
 
-# ⏰ [여기가 바뀐 부분입니다!] 9시, 13시, 16시, 20시로 예약 시간 변경 완료
 def calculate_scheduled_time():
     kst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(kst) 
@@ -98,6 +103,36 @@ CTA_CODE = """
 </div>
 """
 
+# 📊 모바일 대응 주식 계산기 4종 링킹 배너 보드 생성 (HTML 위젯)
+CALCULATOR_BOARD_CODE = f"""
+<div class="calc-board-container" style="margin: 35px 0; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; font-family: -apple-system, sans-serif;">
+    <p style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #0f172a; text-align: center;">⚡ 리스크 관리를 위한 실시간 주식 계산기 모음</p>
+    
+    <div class="calc-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+        <a href="{https://invest.gwangchoon.com/2026/05/1_0144690541.html}" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <span style="display: block; font-size: 20px; margin-bottom: 4px;">📉</span>
+            <span style="display: block; font-size: 14px; font-weight: 700; color: #2563eb;">주식 물타기</span>
+            <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">평단가 낮추기</span>
+        </a>
+        <a href="{https://invest.gwangchoon.com/2026/05/blog-post_281.html}" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <span style="display: block; font-size: 20px; margin-bottom: 4px;">💰</span>
+            <span style="display: block; font-size: 14px; font-weight: 700; color: #0d9488;">익절 / 손절가</span>
+            <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">단타 맞춤</span>
+        </a>
+        <a href="{https://invest.gwangchoon.com/2026/05/10-1.html}" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <span style="display: block; font-size: 20px; margin-bottom: 4px;">📈</span>
+            <span style="display: block; font-size: 14px; font-weight: 700; color: #4f46e5;">연복리 시뮬</span>
+            <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">미래 자산 예측</span>
+        </a>
+        <a href="{https://invest.gwangchoon.com/2026/05/blog-post_989.html}" style="display: block; background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 15px 10px; text-align: center; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <span style="display: block; font-size: 20px; margin-bottom: 4px;">🎯</span>
+            <span style="display: block; font-size: 14px; font-weight: 700; color: #1e293b;">미국주식 환율계산</span>
+            <span style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">해외주식 소득세</span>
+        </a>
+    </div>
+</div>
+"""
+
 def generate_blog_content(news_data):
     api_key_direct = os.environ.get("API_KEY")
     client = genai.Client(
@@ -105,7 +140,6 @@ def generate_blog_content(news_data):
         http_options=types.HttpOptions(api_version="v1")
     )
     
-    # ⚡ [제목 후킹 업그레이드] 실전 조회수 폭발을 위한 강력한 제목 생성 지침 주입
     prompt = (
         "아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 전문 시황 분석 글을 작성해줘.\n\n"
         f"[뉴스 데이터]\n{news_data}\n\n"
@@ -117,7 +151,7 @@ def generate_blog_content(news_data):
         "2. 마케팅 카피라이팅 기법인 PASONA 법칙을 적용하여 자연스럽게 풀어써줘. 단, 파소나, AI, 인공지능 단어는 절대 언급 금지.\n"
         "3. 모바일 화면 최적화를 위해 한 문장이 끝날 때마다 줄바꿈을 하고, 2-3문장마다 공백 라인을 두어라. 본문에 특수 기호나 대괄호를 섞지 마라.\n"
         "4. 본문 내용 중 가장 핵심이 되는 주식 용어, 주요 종목명, 시장 방향성 키워드를 선정하여 반드시 구글 블로그 표준 태그 양식인 <b><font color=\"#e11d48\">중요키워드</font></b> 양식으로 감싸라. 단락당 2~3개 정도가 적당하다. 스팬(span)이나 스타일 태그는 절대 사용 금지.\n"
-        "5. 본문은 반드시 3개의 파트로 나누고 소제목을 추출해줘.\n"
+        "5. 본문은 반드시 3개의 파트를 나누고 소제목을 추출해줘.\n"
         "6. 영문 이미지 검색 키워드를 IMAGE_PROMPT에 딱 2-3단어 명사로 짧게 추천해줘.\n"
         "7. 검색용 주식 태그를 3-5개 추출해줘. (쉼표 구분)\n\n"
         "[출력 포맷 고정]\n"
@@ -169,8 +203,7 @@ def main():
 
     title = re_extract_line('TITLE', ai_raw, "오늘의 주식 투자 시황 핵심 분석 요약")
     
-    # 🚨 [추가] 제목에 혹시라도 들어갈 수 있는 HTML 태그 및 마크다운 기호 강제 제거
-    title = re.sub(r'<[^>]*>', '', title)  # 모든 HTML 태그 <...> 제거
+    title = re.sub(r'<[^>]*>', '', title)  
     title = title.replace('`', '').replace('**', '').replace('__', '').strip()
     tags_raw = re_extract_line('TAGS', ai_raw, "주식투자, 재테크, 국내증시")
     img_prompt = re_extract_line('IMAGE_PROMPT', ai_raw, "STOCK MARKET").upper()
@@ -225,6 +258,7 @@ def main():
     b2_html = body2.replace('\n', '<br>')
     b3_html = body3.replace('\n', '<br>')
 
+    # 🏗️ [구조 개편] 첫 번째 본문 내용과 첫 광고 집행 직후 계산기 보드 배치 완료
     final_html = f"""
     <div style="text-align:center; margin-bottom:30px;">
         <img src="{thumbnail_url}" alt="{keyword} Report" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
@@ -232,6 +266,9 @@ def main():
     <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{sub1}</h3>
     <div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b1_html}</div>
     {ADSENSE_CODE}
+    
+    {CALCULATOR_BOARD_CODE}
+    
     <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{sub2}</h3>
     <div class="post-p2" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b2_html}</div>
     <div style="text-align:center; margin: 35px 0;"><img src="{inline_image_url}" alt="Market Index Trend" style="max-width:100%; height:auto; border-radius:6px;"/></div>
