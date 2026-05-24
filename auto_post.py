@@ -3,7 +3,7 @@ import sys
 import subprocess
 import time
 import re
-import random  # 🎲 랜덤 이미지 선택을 위해 추가
+import random  # 🎲 랜덤 이미지 멀티 선택을 위해 필수 유지
 
 # [1단계] 라이브러리 자동 설치 및 검증
 required_modules = [
@@ -47,18 +47,22 @@ GOOGLE_ADSENSE_CLIENT = "ca-pub-4292478378917157"
 GOOGLE_ADSENSE_SLOT = "5317754949"
 GOOGLE_ALERT_RSS_URL = "https://www.google.co.kr/alerts/feeds/13793017153619247481/11360882853986229297"
 
-# 📂 [추가] 깃허브 레포지토리 내 이미지 풀 (사용자 환경에 맞게 이미지 주소를 채워 넣으세요)
-# 예: https://raw.githubusercontent.com/본인계정/레포지토리명/main/폴더명/이미지.png
-GITHUB_IMAGE_BASE_URL = "https://raw.githubusercontent.com/YOUR_GITHUB_ID/YOUR_REPO/main/images/"
+# 📂 [⚠️ 중요: 이미지 오류 해결 지침] 
+# 아래 주소에서 유저님의 실제 깃허브 ID와 레포지토리 이름을 꼭 넣어주세요.
+# 반드시 'raw.githubusercontent.com' 형태의 주소여야 블로그스팟에서 엑스박스가 뜨지 않습니다.
+GITHUB_IMAGE_BASE_URL = "https://raw.githubusercontent.com/본인깃허브ID/레포지토리이름/main/images/"
+
+# 🔗 [⚠️ 필독] 본인의 images 폴더 안에 들어있는 실제 이미지 파일명들을 여기에 정확히 적어주세요!
+# 최소 3개 이상의 이미지 파일명이 등록되어 있어야 본문에 중복 없이 골고루 3장이 배치됩니다.
 github_images_pool = [
-    "stock_analysis_01.png",
-    "chart_trend_02.png",
-    "bull_market_03.png",
-    "candlestick_04.png",
-    "finance_graph_05.png"
+    "stock_image1.png",
+    "stock_image2.png",
+    "stock_image3.png",
+    "stock_image4.png",
+    "stock_image5.png"
 ]
 
-# 🔗 직접 올리신 주식 계산기 4종의 블로그스팟 주소
+# 🔗 직접 올리신 주식 계산기 4종의 블로그스팟 주소 (누락 없이 완벽 매칭용 변수 정의)
 URL_물타기 = "https://invest.gwangchoon.com/2026/05/1_0144690541.html"
 URL_손절익절 = "https://invest.gwangchoon.com/2026/05/blog-post_281.html"
 URL_복리 = "https://invest.gwangchoon.com/2026/05/10-1.html"
@@ -80,11 +84,11 @@ def calculate_scheduled_time():
     kst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(kst) 
     today = now.date()
-    # 유저의 지정 발송 주기 반영: 오전 10시, 오후 2시, 오후 6시 예약 배치 구조화
     candidates = [
-        datetime.datetime.combine(today, datetime.time(10, 0), tzinfo=kst),
-        datetime.datetime.combine(today, datetime.time(14, 0), tzinfo=kst),
-        datetime.datetime.combine(today, datetime.time(18, 0), tzinfo=kst)
+        datetime.datetime.combine(today, datetime.time(9, 0), tzinfo=kst),
+        datetime.datetime.combine(today, datetime.time(13, 0), tzinfo=kst),
+        datetime.datetime.combine(today, datetime.time(16, 0), tzinfo=kst),
+        datetime.datetime.combine(today, datetime.time(20, 0), tzinfo=kst)
     ]
     scheduled_time = None
     for c in candidates:
@@ -93,7 +97,7 @@ def calculate_scheduled_time():
             break
     if not scheduled_time:
         tomorrow = today + datetime.timedelta(days=1)
-        scheduled_time = datetime.datetime.combine(tomorrow, datetime.time(10, 0), tzinfo=kst)
+        scheduled_time = datetime.datetime.combine(tomorrow, datetime.time(9, 0), tzinfo=kst)
         
     iso_str = scheduled_time.strftime('%Y-%m-%dT%H:%M:%S+09:00')
     return iso_str
@@ -106,40 +110,44 @@ ADSENSE_CODE = """
 </div>
 """.replace("{CLIENT}", GOOGLE_ADSENSE_CLIENT).replace("{SLOT}", GOOGLE_ADSENSE_SLOT)
 
-# 🎯 [리뉴얼] 주식 계산기 클릭 및 유도를 극대화하는 CTA 레이아웃
-CTA_CODE = f"""
+# 🎯 계산기 모음 버튼 클릭을 한 번 더 강력하게 자극하는 하단 CTA 레이아웃
+CTA_CODE = """
 <div class="cta-box" style="border: 2px dashed #2563eb; padding: 22px; border-radius: 12px; background-color: #f0fdf4; margin-top: 40px; text-align: center;">
     <p style="font-size: 17px; color: #166534; font-weight: bold; margin-bottom: 10px; display: inline-block; background: #dcfce7; padding: 4px 12px; border-radius: 20px;">📊 손실 없는 완벽한 리스크 관리 법칙</p>
     <p style="font-size: 14px; color: #1e293b; line-height: 1.7; margin: 0 0 15px 0; font-weight: 500;">
-        방금 확인하신 시장 변동성에 무작위로 뇌동매매를 진행하면 자산이 순식간에 녹아내릴 수 있습니다.<br>
-        지금 바로 상단에 배치된 <b>[실시간 주식 계산기 모음판]</b>을 활용하여 본인의 정확한 <b>물타기 평단가</b>와 <b>손절/익절 마지노선</b>을 수치로 직접 검증한 뒤 안전하게 진입하세요!
+        방금 확인하신 시장 변동성에 무작위로 대처하면 자산이 순식간에 손실 구간으로 진입할 수 있습니다.<br>
+        지금 바로 본문에 배치된 <b>[실시간 주식 계산기 모음판]</b>으로 이동하여 본인의 정확한 <b>물타기 평단가</b>와 <b>손절/익절 가이드라인</b>을 수치로 직접 검증한 뒤 안전하게 매매를 진행하세요!
     </p>
     <a href="#calc-board-top" style="display: inline-block; background: #16a34a; color: white; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2);">⚡ 실시간 계산기로 내 평단가 진단하기</a>
 </div>
 """
 
-# 📊 버튼 레이아웃 1열 종대 대형 글씨 유지
+# 📊 [완벽 복구] 4가지 핵심 계산기가 흩어지지 않고 하나의 보드에 완벽하게 묶인 코드 블록
 CALCULATOR_BOARD_CODE = f"""
 <div id="calc-board-top" class="calc-board-container" style="margin: 40px 0; padding: 20px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
     <p style="margin: 0 0 20px 0; font-size: 20px; font-weight: 900; color: #0f172a; text-align: center; letter-spacing: -0.5px;">⚡ 리스크 관리를 위한 실시간 주식 계산기 모음</p>
     
     <div class="calc-grid" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- 1. 주식 물타기 계산기 -->
         <a href="{URL_물타기}" style="display: block; background: #2563eb; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[📉 주식 물타기 계산기 실행하기]</span>
             <span style="display: block; font-size: 15px; color: #bfdbfe; margin-top: 6px; font-weight: 700;">보유 종목 평단가 낮추기 및 추가 매수 시뮬레이션</span>
         </a>
         
+        <!-- 2. 익절/손절가 계산기 -->
         <a href="{URL_손절익절}" style="display: block; background: #0d9488; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[💰 익절 / 손절가 기준 계산기]</span>
             <span style="display: block; font-size: 15px; color: #ccfbf1; margin-top: 6px; font-weight: 700;">단타 실전 매매 맞춤형 목표가 및 유상 설정</span>
         </a>
         
+        <!-- 3. 연복리 시뮬레이터 -->
         <a href="{URL_복리}" style="display: block; background: #4f46e5; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[📈 연복리 자산 성장 시뮬레이터]</span>
             <span style="display: block; font-size: 15px; color: #e0e7ff; margin-top: 6px; font-weight: 700;">장기 투자 및 복리 마법 기반 미래 자산 예측</span>
         </a>
         
-        <a href="{URL_환율}" style="style="display: block; background: #334155; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(51, 65, 85, 0.2); box-sizing: border-box;">
+        <!-- 4. 미국주식 환율 계산기 -->
+        <a href="{URL_환율}" style="display: block; background: #334155; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(51, 65, 85, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 25px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[🎯 미국주식 실시간 환율 계산기]</span>
             <span style="display: block; font-size: 15px; color: #cbd5e1; margin-top: 6px; font-weight: 700;">해외주식 양도소득세 및 환율 변동성 체크</span>
         </a>
@@ -154,20 +162,19 @@ def generate_blog_content(news_data):
         http_options=types.HttpOptions(api_version="v1")
     )
     
-    # 🧠 프롬프트 고도화: PASONA/파소나 노출 전면 금지 및 논리 흐름 강제화 지침
     prompt = (
         "아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 전문 시황 분석 글을 작성해줘.\n\n"
         f"[뉴스 데이터]\n{news_data}\n\n"
         "[필수 작성 지침]\n"
-        "1. [제목 법칙]: 글 제목은 검색량이 많고 본능적으로 클릭을 유도하도록 실전 SEO 고유명사 키워드(예: 삼성전자, 코스피 시황 등)와 공포/손실 회피 심리를 자극하는 마케팅 숫자를 완벽 조합해라.\n"
-        "2. [문장 구성 핵심 원칙]: 독자의 주의를 끌기 위해 시장의 '문제점'을 먼저 강하게 제기하고, 그로 인한 '위기감과 손실 우려'를 심화시킨 뒤, 명확한 '해결 대안'을 제시하면서 최종적으로 행동을 촉구하는 자연스러운 설득 흐름으로 본문을 구성해라. 단! 본문이나 결과물 그 어디에도 '파소나', 'PASONA', '카피라이팅', '마케팅 프레임워크', 'AI', '인공지능'과 같은 단어는 단 한 번도 언급해서는 안 된다. 독자가 눈치채지 못하게 은밀하고 정교하게 서술하라.\n"
-        "3. 모바일 가독성을 위해 한 문장마다 줄바꿈을 하고, 2-3문장마다 공백 라인을 두어라. 불필요한 특수문자나 대괄호는 배제하라.\n"
-        "4. 가장 핵심이 되는 경제 용어나 주식 시장의 방향성 키워드는 무조건 <b><font color=\"#e11d48\">중요키워드</font></b> 양식으로 감싸라. 스팬(span)이나 인라인 스타일 태그는 사용 금지.\n"
-        "5. 본문은 명확히 3개의 파트로 소제목을 나누어 추출해라.\n"
+        "1. [제목 법칙]: 글 제목은 반드시 실전 SEO 키워드(예: 삼성전자, 코스피 시황, 미국 증시 등 실제 뉴스 데이터 기반 고유명사)와 공포/손실회피 마케팅 숫자를 조합하여 강력하게 구성하라.\n"
+        "2. 독자의 주의를 확 끈 다음 위기감을 증폭시키고 대안적 해결책을 주는 설득 흐름으로 작성하되, 본문 그 어디에도 '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능'이라는 영문/국문 단어를 절대로 쓰면 안 된다.\n"
+        "3. 모바일 화면 최적화를 위해 한 문장이 끝날 때마다 줄바꿈을 하고, 2-3문장마다 공백 라인을 두어라. 본문에 대괄호 나 특수기호를 절대 사용하지 마라.\n"
+        "4. 시장의 핵심이 되는 주식 용어 및 방향성은 반드시 구글 표준 <b><font color=\"#e11d48\">중요키워드</font></b> 양식으로만 강조하라.\n"
+        "5. 본문은 무조건 3개의 파트로 나누고 정보성 소제목을 확실히 부여하라.\n"
         "6. 영문 이미지 검색 키워드를 IMAGE_PROMPT에 딱 2-3단어 명사로 추천해줘.\n"
-        "7. 태그를 3-5개 추출해줘. (쉼표 구분)\n\n"
+        "7. 검색용 주식 태그를 3-5개 추출해줘. (쉼표 구분)\n\n"
         "[출력 포맷 고정]\n"
-        "[TITLE]: 낚시성과 정보성이 완벽히 결합된 검색 최적화 주식 제목\n"
+        "[TITLE]: 실전 주식 자극적 제목\n"
         "[TAGS]: 주식투자, 재테크, 국내증시\n"
         "[IMAGE_PROMPT]: stock market index\n"
         "[SUB_TITLE_1]: 소제목1\n"
@@ -217,7 +224,6 @@ def main():
     title = re.sub(r'<[^>]*>', '', title).replace('`', '').replace('**', '').replace('__', '').strip()
     
     tags_raw = re_extract_line('TAGS', ai_raw, "주식투자, 재테크, 국내증시")
-    img_prompt = re_extract_line('IMAGE_PROMPT', ai_raw, "STOCK MARKET").upper()
     sub1 = re_extract_line('SUB_TITLE_1', ai_raw, "📈 오늘 시장 핵심 경제 시황")
     sub2 = re_extract_line('SUB_TITLE_2', ai_raw, "📊 주요 분석 및 핵심 지표 체크")
     sub3 = re_extract_line('SUB_TITLE_3', ai_raw, "💡 향후 투자 전략 및 대응")
@@ -259,34 +265,43 @@ def main():
     if not tags:
         tags = ['주식투자', '재테크', '국내증시']
 
-    # 🎲 [반영] 깃허브 이미지 풀에서 무작위로 한 장을 선택하여 본문 상단 고정 매칭
-    chosen_github_img = random.choice(github_images_pool)
-    random_thumbnail_url = f"{GITHUB_IMAGE_BASE_URL}{chosen_github_img}"
-    print(f"🎲 [이미지 셔플 완료] 이번 포스팅에 매칭된 깃허브 이미지: {chosen_github_img}")
+    # 🎲 [개선 원리] 3장의 무작위 이미지를 중복 없이 풀에서 추출
+    # 이미지 풀 개수가 부족할 상황을 대비해 안전하게 샘플링 개수 제한 장치 추가
+    sample_count = min(3, len(github_images_pool))
+    chosen_images = random.sample(github_images_pool, sample_count)
     
-    # 하단 플레이스홀더 대체 백업용 유지
-    keyword = img_prompt if img_prompt else 'STOCK MARKET'
-    inline_image_url = f"https://placehold.co/800x450/0f172a/38bdf8/png?text=FINANCE+INVESTMENT+RETAIL&font=roboto"
+    # 만약 풀에 채워진 이미지가 부족하면 에러 보정용 기본값 처리
+    img_url1 = f"{GITHUB_IMAGE_BASE_URL}{chosen_images[0]}" if sample_count >= 1 else "https://placehold.co/800x450/1e3a8a/ffffff/png?text=FINANCE1"
+    img_url2 = f"{GITHUB_IMAGE_BASE_URL}{chosen_images[1]}" if sample_count >= 2 else "https://placehold.co/800x450/0d9488/ffffff/png?text=FINANCE2"
+    img_url3 = f"{GITHUB_IMAGE_BASE_URL}{chosen_images[2]}" if sample_count >= 3 else "https://placehold.co/800x450/4f46e5/ffffff/png?text=FINANCE3"
+    
+    print(f"🎲 [멀티 셔플 동기화] 배치 확정 이미지 리스트: {chosen_images}")
     
     b1_html = body1.replace('\n', '<br>')
     b2_html = body2.replace('\n', '<br>')
     b3_html = body3.replace('\n', '<br>')
 
-    # 🏗️ 본문 내 동적 조립 및 최종 레이아웃 확정
+    # 🏗️ [구조 개편 완료] 각 소제목 바로 위에 개별 이미지 3장을 매칭하고, 계산기 4종 보드는 온전히 한곳에 고정
     final_html = f"""
-    <div style="text-align:center; margin-bottom:30px;">
-        <img src="{random_thumbnail_url}" alt="Market Realtime Report" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
+    <div style="text-align:center; margin-bottom:25px;">
+        <img src="{img_url1}" alt="Market Section 1" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
     </div>
-    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{sub1}</h3>
+    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub1}</h3>
     <div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b1_html}</div>
     {ADSENSE_CODE}
     
     {CALCULATOR_BOARD_CODE}
     
-    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{sub2}</h3>
+    <div style="text-align:center; margin-bottom:25px; margin-top:35px;">
+        <img src="{img_url2}" alt="Market Section 2" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
+    </div>
+    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub2}</h3>
     <div class="post-p2" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b2_html}</div>
-    <div style="text-align:center; margin: 35px 0;"><img src="{inline_image_url}" alt="Market Index Trend" style="max-width:100%; height:auto; border-radius:6px;"/></div>
-    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{sub3}</h3>
+    
+    <div style="text-align:center; margin-bottom:25px; margin-top:35px;">
+        <img src="{img_url3}" alt="Market Section 3" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
+    </div>
+    <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub3}</h3>
     <div class="post-p3" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b3_html}</div>
     {ADSENSE_CODE}
     {CTA_CODE}
@@ -301,22 +316,16 @@ def main():
         'published': scheduled_publish_time
     }
     
-    print(f"📡 [디버그] 전송 준비 완료 - 블로그 ID: {BLOG_ID}")
-    print(f"📡 [디버그] 후킹 완성된 제목: {title}")
-    print(f"📡 [디버그] 설정된 예약 발행 시간 (KST): {scheduled_publish_time}")
+    print(f"📡 [디버그] 예약 발행 시간 (KST): {scheduled_publish_time}")
     print("📝 무결성 클린 레이아웃 기반 블로그 업로드 API 요청 전송 중...")
     
     try:
         posts_service = blogger.posts()
         request = posts_service.insert(blogId=BLOG_ID, body=post_data, isDraft=False)
-        print("📡 [디버그] 구글 API 엔드포인트 커넥션 성공. 데이터 패킷 동기화 실행...")
-        
         created_post = request.execute()
-        
-        print(f"✅ [안정화 본딩 성공] 구글 블로거에 글이 완벽하게 등록되었습니다!")
-        print(f"🔗 최종 연동된 포스트 제목: {created_post.get('title')}")
+        print(f"✅ [안정화 본딩 성공] 구글 블로거에 글과 {sample_count}장의 이미지가 완벽하게 등록되었습니다!")
     except Exception as api_err:
-        print(f"❌ [네트워크/API 에러 발생]: 구글 서버가 전송을 거부했거나 오류를 반환했습니다. 원인: {api_err}")
+        print(f"❌ [네트워크/API 에러 발생] 원인: {api_err}")
 
 if __name__ == "__main__":
     main()
