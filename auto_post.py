@@ -3,6 +3,7 @@ import sys
 import subprocess
 import time
 import re
+import random  # 🎲 랜덤 이미지 선택을 위해 추가
 
 # [1단계] 라이브러리 자동 설치 및 검증
 required_modules = [
@@ -46,11 +47,22 @@ GOOGLE_ADSENSE_CLIENT = "ca-pub-4292478378917157"
 GOOGLE_ADSENSE_SLOT = "5317754949"
 GOOGLE_ALERT_RSS_URL = "https://www.google.co.kr/alerts/feeds/13793017153619247481/11360882853986229297"
 
-# 🔗 [중요] 직접 올리신 주식 계산기 4종의 블로그스팟 주소를 여기에 넣으세요!
-URL_물타기 = "https://본인블로그주소/물타기-계산기-글주소.html"
-URL_매수수량 = "https://본인블로그주소/매수수량-계산기-글주소.html"
-URL_복리 = "https://본인블로그주소/복리-계산기-글주소.html"
-URL_손절익절 = "https://본인블로그주소/손절익절-계산기-글주소.html"
+# 📂 [추가] 깃허브 레포지토리 내 이미지 풀 (사용자 환경에 맞게 이미지 주소를 채워 넣으세요)
+# 예: https://raw.githubusercontent.com/본인계정/레포지토리명/main/폴더명/이미지.png
+GITHUB_IMAGE_BASE_URL = "https://raw.githubusercontent.com/YOUR_GITHUB_ID/YOUR_REPO/main/images/"
+github_images_pool = [
+    "stock_analysis_01.png",
+    "chart_trend_02.png",
+    "bull_market_03.png",
+    "candlestick_04.png",
+    "finance_graph_05.png"
+]
+
+# 🔗 직접 올리신 주식 계산기 4종의 블로그스팟 주소
+URL_물타기 = "https://invest.gwangchoon.com/2026/05/1_0144690541.html"
+URL_손절익절 = "https://invest.gwangchoon.com/2026/05/blog-post_281.html"
+URL_복리 = "https://invest.gwangchoon.com/2026/05/10-1.html"
+URL_환율 = "https://invest.gwangchoon.com/2026/05/blog-post_989.html"
 
 def fetch_google_alerts_news():
     print("📡 구글 알리미 주식 RSS 피드 수집 중...")
@@ -68,11 +80,11 @@ def calculate_scheduled_time():
     kst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(kst) 
     today = now.date()
+    # 유저의 지정 발송 주기 반영: 오전 10시, 오후 2시, 오후 6시 예약 배치 구조화
     candidates = [
-        datetime.datetime.combine(today, datetime.time(9, 0), tzinfo=kst),
-        datetime.datetime.combine(today, datetime.time(13, 0), tzinfo=kst),
-        datetime.datetime.combine(today, datetime.time(16, 0), tzinfo=kst),
-        datetime.datetime.combine(today, datetime.time(20, 0), tzinfo=kst)
+        datetime.datetime.combine(today, datetime.time(10, 0), tzinfo=kst),
+        datetime.datetime.combine(today, datetime.time(14, 0), tzinfo=kst),
+        datetime.datetime.combine(today, datetime.time(18, 0), tzinfo=kst)
     ]
     scheduled_time = None
     for c in candidates:
@@ -81,7 +93,7 @@ def calculate_scheduled_time():
             break
     if not scheduled_time:
         tomorrow = today + datetime.timedelta(days=1)
-        scheduled_time = datetime.datetime.combine(tomorrow, datetime.time(9, 0), tzinfo=kst)
+        scheduled_time = datetime.datetime.combine(tomorrow, datetime.time(10, 0), tzinfo=kst)
         
     iso_str = scheduled_time.strftime('%Y-%m-%dT%H:%M:%S+09:00')
     return iso_str
@@ -94,41 +106,40 @@ ADSENSE_CODE = """
 </div>
 """.replace("{CLIENT}", GOOGLE_ADSENSE_CLIENT).replace("{SLOT}", GOOGLE_ADSENSE_SLOT)
 
-CTA_CODE = """
-<div class="cta-box" style="border: 2px solid #3b82f6; padding: 20px; border-radius: 10px; background-color: #f8fafc; margin-top: 40px;">
-    <p style="font-size: 15px; color: #1e293b; font-weight: bold; margin-bottom: 8px;">💡 투자 참고 유의사항</p>
-    <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin: 0;">
-        본 콘텐츠는 구글 알리미 주식 투자 관련 뉴스를 기반으로 금융 분석 시스템과 시장 데이터를 활용해 요약·편집한 정보성 글이며, 특정 종목에 대한 추천이나 투자 권유가 아닙니다. 모든 투자의 책임은 투자자 본인에게 있으므로 신중하게 결정하시기 바랍니다. <b>성공적인 투자를 응원합니다.</b>
+# 🎯 [리뉴얼] 주식 계산기 클릭 및 유도를 극대화하는 CTA 레이아웃
+CTA_CODE = f"""
+<div class="cta-box" style="border: 2px dashed #2563eb; padding: 22px; border-radius: 12px; background-color: #f0fdf4; margin-top: 40px; text-align: center;">
+    <p style="font-size: 17px; color: #166534; font-weight: bold; margin-bottom: 10px; display: inline-block; background: #dcfce7; padding: 4px 12px; border-radius: 20px;">📊 손실 없는 완벽한 리스크 관리 법칙</p>
+    <p style="font-size: 14px; color: #1e293b; line-height: 1.7; margin: 0 0 15px 0; font-weight: 500;">
+        방금 확인하신 시장 변동성에 무작위로 뇌동매매를 진행하면 자산이 순식간에 녹아내릴 수 있습니다.<br>
+        지금 바로 상단에 배치된 <b>[실시간 주식 계산기 모음판]</b>을 활용하여 본인의 정확한 <b>물타기 평단가</b>와 <b>손절/익절 마지노선</b>을 수치로 직접 검증한 뒤 안전하게 진입하세요!
     </p>
+    <a href="#calc-board-top" style="display: inline-block; background: #16a34a; color: white; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2);">⚡ 실시간 계산기로 내 평단가 진단하기</a>
 </div>
 """
 
-# 📊 [버튼 레이아웃 전면 리뉴얼] 가로 분할을 없애고 1열로 세워 대형 글씨(26px)가 버튼 내부를 가득 채우도록 변경
+# 📊 버튼 레이아웃 1열 종대 대형 글씨 유지
 CALCULATOR_BOARD_CODE = f"""
-<div class="calc-board-container" style="margin: 40px 0; padding: 20px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+<div id="calc-board-top" class="calc-board-container" style="margin: 40px 0; padding: 20px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
     <p style="margin: 0 0 20px 0; font-size: 20px; font-weight: 900; color: #0f172a; text-align: center; letter-spacing: -0.5px;">⚡ 리스크 관리를 위한 실시간 주식 계산기 모음</p>
     
     <div class="calc-grid" style="display: flex; flex-direction: column; gap: 12px;">
-        <!-- 1. 주식 물타기 계산기 -->
-        <a href="https://invest.gwangchoon.com/2026/05/1_0144690541.html" style="display: block; background: #2563eb; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); box-sizing: border-box;">
+        <a href="{URL_물타기}" style="display: block; background: #2563eb; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[📉 주식 물타기 계산기 실행하기]</span>
             <span style="display: block; font-size: 15px; color: #bfdbfe; margin-top: 6px; font-weight: 700;">보유 종목 평단가 낮추기 및 추가 매수 시뮬레이션</span>
         </a>
         
-        <!-- 2. 익절/손절가 계산기 -->
-        <a href="https://invest.gwangchoon.com/2026/05/blog-post_281.html" style="display: block; background: #0d9488; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2); box-sizing: border-box;">
+        <a href="{URL_손절익절}" style="display: block; background: #0d9488; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[💰 익절 / 손절가 기준 계산기]</span>
             <span style="display: block; font-size: 15px; color: #ccfbf1; margin-top: 6px; font-weight: 700;">단타 실전 매매 맞춤형 목표가 및 유상 설정</span>
         </a>
         
-        <!-- 3. 연복리 시뮬레이터 -->
-        <a href="https://invest.gwangchoon.com/2026/05/10-1.html" style="display: block; background: #4f46e5; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); box-sizing: border-box;">
+        <a href="{URL_복리}" style="display: block; background: #4f46e5; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[📈 연복리 자산 성장 시뮬레이터]</span>
             <span style="display: block; font-size: 15px; color: #e0e7ff; margin-top: 6px; font-weight: 700;">장기 투자 및 복리 마법 기반 미래 자산 예측</span>
         </a>
         
-        <!-- 4. 미국주식 환율 계산기 -->
-        <a href="https://invest.gwangchoon.com/2026/05/blog-post_989.html" style="display: block; background: #334155; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(51, 65, 85, 0.2); box-sizing: border-box;">
+        <a href="{URL_환율}" style="style="display: block; background: #334155; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(51, 65, 85, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 25px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[🎯 미국주식 실시간 환율 계산기]</span>
             <span style="display: block; font-size: 15px; color: #cbd5e1; margin-top: 6px; font-weight: 700;">해외주식 양도소득세 및 환율 변동성 체크</span>
         </a>
@@ -143,22 +154,20 @@ def generate_blog_content(news_data):
         http_options=types.HttpOptions(api_version="v1")
     )
     
+    # 🧠 프롬프트 고도화: PASONA/파소나 노출 전면 금지 및 논리 흐름 강제화 지침
     prompt = (
         "아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 전문 시황 분석 글을 작성해줘.\n\n"
         f"[뉴스 데이터]\n{news_data}\n\n"
-        "[필수 작성 지침 - 제목 및 본문 고도화]\n"
-        "1. [★가장 중요 - 제목 법칙★]: 글 제목은 반드시 다음 2가지 법칙을 조합하여 자극적이고 검색량이 많은 형태로 작성해라.단, 소스코드는 쓰지 않는다.\n"
-        "   - 법칙 A (실전 SEO 키워드): 사람들이 매일 검색창에 검색하는 단어 (예: 삼성전자, 코스피 시황, 외국인 매도, 미국 증시, 주식 투자 전략 등 뉴스에 해당되는 실제 고유명사 필수 포함)\n"
-        "   - 법칙 B (숫자 및 손실공포 후킹): 인간의 심리를 자극하는 강렬한 마케팅 문구 (예: ~폭탄 충격, 안 보면 폭망, 딱 3 가지만 체크, 이대로 괜찮을까? 등)\n"
-        "   - 제목 예시: '외국인 매도 폭탄 충격! 삼성전자 4만 원대 붕괴 위기 속 살아남을 투자 전략' 또는 '코스피 함정 탈출법! 2030 대출 연체율 급증 속 무조건 체크할 자산 배분법'\n"
-        "2. 마케팅 카피라이팅 기법인 PASONA 법칙을 적용하여 자연스럽게 풀어써줘. 단, 파소나, AI, 인공지능 단어는 절대 언급 금지.\n"
-        "3. 모바일 화면 최적화를 위해 한 문장이 끝날 때마다 줄바꿈을 하고, 2-3문장마다 공백 라인을 두어라. 본문에 특수 기호나 대괄호를 섞지 마라.\n"
-        "4. 본문 내용 중 가장 핵심이 되는 주식 용어, 주요 종목명, 시장 방향성 키워드를 선정하여 반드시 구글 블로그 표준 태그 양식인 <b><font color=\"#e11d48\">중요키워드</font></b> 양식으로 감싸라. 단락당 2~3개 정도가 적당하다. 스팬(span)이나 스타일 태그는 절대 사용 금지.\n"
-        "5. 본문은 반드시 3개의 파트를 나누고 소제목을 추출해줘.\n"
-        "6. 영문 이미지 검색 키워드를 IMAGE_PROMPT에 딱 2-3단어 명사로 짧게 추천해줘.\n"
-        "7. 검색용 주식 태그를 3-5개 추출해줘. (쉼표 구분)\n\n"
+        "[필수 작성 지침]\n"
+        "1. [제목 법칙]: 글 제목은 검색량이 많고 본능적으로 클릭을 유도하도록 실전 SEO 고유명사 키워드(예: 삼성전자, 코스피 시황 등)와 공포/손실 회피 심리를 자극하는 마케팅 숫자를 완벽 조합해라.\n"
+        "2. [문장 구성 핵심 원칙]: 독자의 주의를 끌기 위해 시장의 '문제점'을 먼저 강하게 제기하고, 그로 인한 '위기감과 손실 우려'를 심화시킨 뒤, 명확한 '해결 대안'을 제시하면서 최종적으로 행동을 촉구하는 자연스러운 설득 흐름으로 본문을 구성해라. 단! 본문이나 결과물 그 어디에도 '파소나', 'PASONA', '카피라이팅', '마케팅 프레임워크', 'AI', '인공지능'과 같은 단어는 단 한 번도 언급해서는 안 된다. 독자가 눈치채지 못하게 은밀하고 정교하게 서술하라.\n"
+        "3. 모바일 가독성을 위해 한 문장마다 줄바꿈을 하고, 2-3문장마다 공백 라인을 두어라. 불필요한 특수문자나 대괄호는 배제하라.\n"
+        "4. 가장 핵심이 되는 경제 용어나 주식 시장의 방향성 키워드는 무조건 <b><font color=\"#e11d48\">중요키워드</font></b> 양식으로 감싸라. 스팬(span)이나 인라인 스타일 태그는 사용 금지.\n"
+        "5. 본문은 명확히 3개의 파트로 소제목을 나누어 추출해라.\n"
+        "6. 영문 이미지 검색 키워드를 IMAGE_PROMPT에 딱 2-3단어 명사로 추천해줘.\n"
+        "7. 태그를 3-5개 추출해줘. (쉼표 구분)\n\n"
         "[출력 포맷 고정]\n"
-        "[TITLE]: 2대 법칙을 적용하여 자극적으로 낚는 실전 주식 제목\n"
+        "[TITLE]: 낚시성과 정보성이 완벽히 결합된 검색 최적화 주식 제목\n"
         "[TAGS]: 주식투자, 재테크, 국내증시\n"
         "[IMAGE_PROMPT]: stock market index\n"
         "[SUB_TITLE_1]: 소제목1\n"
@@ -205,9 +214,8 @@ def main():
         return default
 
     title = re_extract_line('TITLE', ai_raw, "오늘의 주식 투자 시황 핵심 분석 요약")
+    title = re.sub(r'<[^>]*>', '', title).replace('`', '').replace('**', '').replace('__', '').strip()
     
-    title = re.sub(r'<[^>]*>', '', title)  
-    title = title.replace('`', '').replace('**', '').replace('__', '').strip()
     tags_raw = re_extract_line('TAGS', ai_raw, "주식투자, 재테크, 국내증시")
     img_prompt = re_extract_line('IMAGE_PROMPT', ai_raw, "STOCK MARKET").upper()
     sub1 = re_extract_line('SUB_TITLE_1', ai_raw, "📈 오늘 시장 핵심 경제 시황")
@@ -251,20 +259,23 @@ def main():
     if not tags:
         tags = ['주식투자', '재테크', '국내증시']
 
-    keyword = img_prompt if img_prompt else 'STOCK MARKET'
-    encoded_text = urllib.parse.quote(f"FINANCE ANALYSIS: {keyword}")
+    # 🎲 [반영] 깃허브 이미지 풀에서 무작위로 한 장을 선택하여 본문 상단 고정 매칭
+    chosen_github_img = random.choice(github_images_pool)
+    random_thumbnail_url = f"{GITHUB_IMAGE_BASE_URL}{chosen_github_img}"
+    print(f"🎲 [이미지 셔플 완료] 이번 포스팅에 매칭된 깃허브 이미지: {chosen_github_img}")
     
-    thumbnail_url = f"https://placehold.co/800x450/1e3a8a/ffffff/png?text={encoded_text}&font=playfair"
+    # 하단 플레이스홀더 대체 백업용 유지
+    keyword = img_prompt if img_prompt else 'STOCK MARKET'
     inline_image_url = f"https://placehold.co/800x450/0f172a/38bdf8/png?text=FINANCE+INVESTMENT+RETAIL&font=roboto"
     
     b1_html = body1.replace('\n', '<br>')
     b2_html = body2.replace('\n', '<br>')
     b3_html = body3.replace('\n', '<br>')
 
-    # 🏗️ [구조 개편] 첫 번째 본문 내용과 첫 광고 집행 직후 계산기 보드 배치 완료
+    # 🏗️ 본문 내 동적 조립 및 최종 레이아웃 확정
     final_html = f"""
     <div style="text-align:center; margin-bottom:30px;">
-        <img src="{thumbnail_url}" alt="{keyword} Report" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
+        <img src="{random_thumbnail_url}" alt="Market Realtime Report" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
     </div>
     <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 35px; margin-bottom: 20px;">{sub1}</h3>
     <div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b1_html}</div>
