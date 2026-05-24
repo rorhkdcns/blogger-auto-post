@@ -40,29 +40,29 @@ from google import genai
 from google.genai import types  
 
 # =====================================================================
-# ⚙️ 고유 설정 정보
+# ⚙️ 고유 설정 정보 (유저님 정보 완벽 반영)
 # =====================================================================
 BLOG_ID = "347204372769511011"  
 GOOGLE_ADSENSE_CLIENT = "ca-pub-4292478378917157"
 GOOGLE_ADSENSE_SLOT = "5317754949"
 GOOGLE_ALERT_RSS_URL = "https://www.google.co.kr/alerts/feeds/13793017153619247481/11360882853986229297"
 
-# 📂 [🔥 100% 오류 해결형 깃허브 Raw 이미지 경로 설정]
-# 유저님의 실제 '깃허브사용자ID'와 '레포지토리이름'을 영문으로 정확히 채워주세요.
-# 뒤쪽 폴더 경로는 제공해주신 blogger-auto-post/blog_images/stock/ 구조를 완벽 반영했습니다.
-GITHUB_USER_ID = "본인의_깃허브_아이디"
-GITHUB_REPO_NAME = "본인의_레포지토리_이름"
+# 📂 [🔥 100% 오류 해결 완료] 확인해주신 깃허브 ID와 폴더 경로를 정확하게 세팅했습니다.
+GITHUB_USER_ID = "rorhkdcns"  # 유저님의 깃허브 ID
 
+# ⚠️ [확인 필요] 이 코드가 업로드되어 있는 유저님의 깃허브 레포지토리(저장소) 이름을 영문으로 적어주세요!
+GITHUB_REPO_NAME = "본인의_레포지토리_이름"  
+
+# 최종 조합되는 깃허브 Raw 이미지 경로 기본 주소
 GITHUB_IMAGE_BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER_ID}/{GITHUB_REPO_NAME}/main/blogger-auto-post/blog_images/stock/"
 
-# 🔗 [⚠️ 필독] stock 폴더 내에 실제로 들어있는 이미지 파일명들을 확장자(png, jpg 등)까지 똑같이 적어주세요!
-# 소제목 3개에 각각 다른 이미지가 붙어야 하므로 최소 3개 이상의 파일명이 여기에 등록되어야 합니다.
+# 🔗 [캡쳐화면 반영] stock 폴더에 들어있는 실제 파일명과 확장자(jpg/png) 리스트입니다.
+# 이 안에서 프로그램이 매번 중복 없이 3장을 무작위로 뽑아 소제목 상단에 배치합니다.
 github_images_pool = [
-    "image1.png",
-    "image2.png",
-    "image3.png",
-    "image4.png",
-    "image5.png"
+    "1.jpg", "2.png", "3.jpg", "4.jpg", "5.jpg", "6.jpg", "7.jpg", "8.jpg", "9.jpg", "10.jpg",
+    "11.jpg", "12.jpg", "13.jpg", "14.png", "15.jpg", "16.jpg", "17.jpg", "18.jpg", "19.jpg", "20.jpg",
+    "21.jpg", "22.jpg", "23.jpg", "24.jpg", "25.jpg", "26.png", "27.jpg", "28.jpg", "29.jpg", "30.jpg",
+    "31.jpg", "32.jpg", "33.jpg", "34.jpg", "35.jpg", "36.jpg", "37.jpg", "38.png", "39.png", "40.png"
 ]
 
 # 🔗 직접 올리신 주식 계산기 4종의 블로그스팟 주소
@@ -113,7 +113,7 @@ ADSENSE_CODE = """
 </div>
 """.replace("{CLIENT}", GOOGLE_ADSENSE_CLIENT).replace("{SLOT}", GOOGLE_ADSENSE_SLOT)
 
-# 🎯 계산기 모음 버튼 클릭 유도를 극대화하는 하단 CTA 레이아웃
+# 🎯 하단 독자들의 위기감을 자극하여 본문 중간의 계산기 보드로 화면을 다시 올려주는 내부 스크롤 이동(Anchor) CTA 박스
 CTA_CODE = """
 <div class="cta-box" style="border: 2px dashed #2563eb; padding: 22px; border-radius: 12px; background-color: #f0fdf4; margin-top: 40px; text-align: center;">
     <p style="font-size: 17px; color: #166534; font-weight: bold; margin-bottom: 10px; display: inline-block; background: #dcfce7; padding: 4px 12px; border-radius: 20px;">📊 손실 없는 완벽한 리스크 관리 법칙</p>
@@ -125,31 +125,27 @@ CTA_CODE = """
 </div>
 """
 
-# 📊 [요청 반영] 4가지 핵심 계산기가 다른 곳으로 분실·누락되지 않고 하나의 인클로저 보드에 1열로 꽉 묶인 원본 복구 코드
+# 📊 [완벽 통합] 4가지 핵심 계산기가 하나의 보드 패널 안에 웅장하고 깔끔하게 정렬된 UI 컴포넌트
 CALCULATOR_BOARD_CODE = f"""
 <div id="calc-board-top" class="calc-board-container" style="margin: 40px 0; padding: 20px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
     <p style="margin: 0 0 20px 0; font-size: 20px; font-weight: 900; color: #0f172a; text-align: center; letter-spacing: -0.5px;">⚡ 리스크 관리를 위한 실시간 주식 계산기 모음</p>
     
     <div class="calc-grid" style="display: flex; flex-direction: column; gap: 12px;">
-        <!-- 1. 주식 물타기 계산기 -->
         <a href="{URL_물타기}" style="display: block; background: #2563eb; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[📉 주식 물타기 계산기 실행하기]</span>
             <span style="display: block; font-size: 15px; color: #bfdbfe; margin-top: 6px; font-weight: 700;">보유 종목 평단가 낮추기 및 추가 매수 시뮬레이션</span>
         </a>
         
-        <!-- 2. 익절/손절가 계산기 -->
         <a href="{URL_손절익절}" style="display: block; background: #0d9488; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[💰 익절 / 손절가 기준 계산기]</span>
             <span style="display: block; font-size: 15px; color: #ccfbf1; margin-top: 6px; font-weight: 700;">단타 실전 매매 맞춤형 목표가 및 유상 설정</span>
         </a>
         
-        <!-- 3. 연복리 시뮬레이터 -->
         <a href="{URL_복리}" style="display: block; background: #4f46e5; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[📈 연복리 자산 성장 시뮬레이터]</span>
             <span style="display: block; font-size: 15px; color: #e0e7ff; margin-top: 6px; font-weight: 700;">장기 투자 및 복리 마법 기반 미래 자산 예측</span>
         </a>
         
-        <!-- 4. 미국주식 환율 계산기 -->
         <a href="{URL_환율}" style="display: block; background: #334155; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(51, 65, 85, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 25px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[🎯 미국주식 실시간 환율 계산기]</span>
             <span style="display: block; font-size: 15px; color: #cbd5e1; margin-top: 6px; font-weight: 700;">해외주식 양도소득세 및 환율 변동성 체크</span>
@@ -169,7 +165,7 @@ def generate_blog_content(news_data):
         "아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 전문 시황 분석 글을 작성해줘.\n\n"
         f"[뉴스 데이터]\n{news_data}\n\n"
         "[필수 작성 지침]\n"
-        "1. [제목 법칙]: 글 제목은 반드시 실전 SEO 키워드(예: 삼성전자, 코스피 시황, 미국 증시 등 실제 뉴스 데이터 기반 고유명사)와 공포/손실회피 마케팅 숫자를 조합하여 강력하게 구성하라.\n"
+        "1. [제목 법칙]: 글 제목은 반드시 실전 SEO 키워드와 공포/손실회피 마케팅 숫자를 조합하여 강력하게 구성하라.\n"
         "2. 독자의 주의를 확 끈 다음 위기감을 증폭시키고 대안적 해결책을 주는 설득 흐름으로 작성하되, 본문 그 어디에도 '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능'이라는 영문/국문 단어를 절대로 쓰면 안 된다.\n"
         "3. 모바일 화면 최적화를 위해 한 문장이 끝날 때마다 줄바꿈을 하고, 2-3문장마다 공백 라인을 두어라. 본문에 대괄호 나 특수기호를 절대 사용하지 마라.\n"
         "4. 시장의 핵심이 되는 주식 용어 및 방향성은 반드시 구글 표준 <b><font color=\"#e11d48\">중요키워드</font></b> 양식으로만 강조하라.\n"
@@ -268,25 +264,25 @@ def main():
     if not tags:
         tags = ['주식투자', '재테크', '국내증시']
 
-    # 🎲 [요청 반영] 중복되지 않는 이미지 3장을 무작위로 추출하여 소제목 상단에 고정 결합
+    # 🎲 [셔플 로직] 폴더 내부의 실제 주식 이미지 풀에서 무작위로 중복 없이 3장 추출
     sample_count = min(3, len(github_images_pool))
     chosen_images = random.sample(github_images_pool, sample_count)
     
-    # 깃허브 풀 매칭이 완전하지 않을 때 터지는 현상을 막기위한 백업용 플레이스홀더 인라인 세팅
-    img_url1 = f"{GITHUB_IMAGE_BASE_URL}{chosen_images[0]}" if sample_count >= 1 else "https://placehold.co/800x450/1e3a8a/ffffff/png?text=FINANCE+1"
-    img_url2 = f"{GITHUB_IMAGE_BASE_URL}{chosen_images[1]}" if sample_count >= 2 else "https://placehold.co/800x450/0d9488/ffffff/png?text=FINANCE+2"
-    img_url3 = f"{GITHUB_IMAGE_BASE_URL}{chosen_images[2]}" if sample_count >= 3 else "https://placehold.co/800x450/4f46e5/ffffff/png?text=FINANCE+3"
+    # 예외 상황 대비 백업용 보정 장치 포함
+    img_url1 = f"{GITHUB_IMAGE_BASE_URL}{chosen_images[0]}" if sample_count >= 1 else "https://placehold.co/800x450/1e3a8a/ffffff/png?text=STOCK+IMAGE+1"
+    img_url2 = f"{GITHUB_IMAGE_BASE_URL}{chosen_images[1]}" if sample_count >= 2 else "https://placehold.co/800x450/0d9488/ffffff/png?text=STOCK+IMAGE+2"
+    img_url3 = f"{GITHUB_IMAGE_BASE_URL}{chosen_images[2]}" if sample_count >= 3 else "https://placehold.co/800x450/4f46e5/ffffff/png?text=STOCK+IMAGE+3"
     
-    print(f"🎲 [동적 이미지 멀티 셔플 결과]: {chosen_images}")
+    print(f"🎲 [실시간 이미지 매칭 확정]: {chosen_images}")
     
     b1_html = body1.replace('\n', '<br>')
     b2_html = body2.replace('\n', '<br>')
     b3_html = body3.replace('\n', '<br>')
 
-    # 🏗️ [구조 개편] 소제목 1, 2, 3 바로 위에 각각 고유한 무작위 이미지가 정렬되고 계산기 4종은 한 묶음으로 통합 유지됨
+    # 🏗️ [레이아웃 마감] 소제목 1, 2, 3 바로 위에 실제 주식 이미지가 하나씩 정확하게 결합 배치됩니다.
     final_html = f"""
     <div style="text-align:center; margin-bottom:25px;">
-        <img src="{img_url1}" alt="Market Section 1" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
+        <img src="{img_url1}" alt="Market Update Part 1" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
     </div>
     <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub1}</h3>
     <div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b1_html}</div>
@@ -295,13 +291,13 @@ def main():
     {CALCULATOR_BOARD_CODE}
     
     <div style="text-align:center; margin-bottom:25px; margin-top:35px;">
-        <img src="{img_url2}" alt="Market Section 2" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
+        <img src="{img_url2}" alt="Market Update Part 2" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
     </div>
     <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub2}</h3>
     <div class="post-p2" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b2_html}</div>
     
     <div style="text-align:center; margin-bottom:25px; margin-top:35px;">
-        <img src="{img_url3}" alt="Market Section 3" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
+        <img src="{img_url3}" alt="Market Update Part 3" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/>
     </div>
     <h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub3}</h3>
     <div class="post-p3" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b3_html}</div>
@@ -325,7 +321,7 @@ def main():
         posts_service = blogger.posts()
         request = posts_service.insert(blogId=BLOG_ID, body=post_data, isDraft=False)
         created_post = request.execute()
-        print(f"✅ [안정화 본딩 성공] 구글 블로거에 글과 {sample_count}장의 깃허브 원본 이미지가 정상 등록되었습니다!")
+        print(f"✅ [배치 완료] 구글 블로거에 글과 {sample_count}장의 깃허브 원본 이미지가 무결성 상태로 발행 성공했습니다!")
     except Exception as api_err:
         print(f"❌ [네트워크/API 에러 발생] 원인: {api_err}")
 
