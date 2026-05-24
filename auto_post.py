@@ -53,8 +53,8 @@ GITHUB_USER_ID = "rorhkdcns"  # 유저님의 깃허브 ID
 # ⚠️ [확인 필요] 이 코드가 업로드되어 있는 유저님의 깃허브 레포지토리(저장소) 이름을 영문으로 적어주세요!
 GITHUB_REPO_NAME = "blogger-auto-post"  
 
-# 최종 조합되는 깃허브 Raw 이미지 경로 기본 주소
-GITHUB_IMAGE_BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER_ID}/{GITHUB_REPO_NAME}/main/blogger-auto-post/blog_images/stock/"
+# 💡 [최종 수정] 유저님의 ID와 실제 폴더 구조를 매칭한 무결성 Raw 이미지 경로입니다.
+GITHUB_IMAGE_BASE_URL = "https://raw.githubusercontent.com/rorhkdcns/blogger-auto-post/main/blog_images/stock/"
 
 # 🔗 [캡쳐화면 반영] stock 폴더에 들어있는 실제 파일명과 확장자(jpg/png) 리스트입니다.
 # 이 안에서 프로그램이 매번 중복 없이 3장을 무작위로 뽑아 소제목 상단에 배치합니다.
