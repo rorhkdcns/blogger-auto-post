@@ -51,7 +51,7 @@ GOOGLE_ALERT_RSS_URL = "https://www.google.co.kr/alerts/feeds/137930171536192474
 GITHUB_USER_ID = "rorhkdcns"  # 유저님의 깃허브 ID
 
 # ⚠️ [확인 필요] 이 코드가 업로드되어 있는 유저님의 깃허브 레포지토리(저장소) 이름을 영문으로 적어주세요!
-GITHUB_REPO_NAME = "본인의_레포지토리_이름"  
+GITHUB_REPO_NAME = "blogger-auto-post"  
 
 # 최종 조합되는 깃허브 Raw 이미지 경로 기본 주소
 GITHUB_IMAGE_BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER_ID}/{GITHUB_REPO_NAME}/main/blogger-auto-post/blog_images/stock/"
