@@ -123,23 +123,24 @@ CTA_CODE = """
 </div>
 """
 
+# 🎯 [무결성 새 창 열기 교정 완료] 4가지 <a> 태그 내부에 target="_blank"를 정확하게 심었습니다.
 CALCULATOR_BOARD_CODE = f"""
 <div id="calc-board-top" class="calc-board-container" style="margin: 40px 0; padding: 20px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
     <p style="margin: 0 0 20px 0; font-size: 20px; font-weight: 900; color: #0f172a; text-align: center; letter-spacing: -0.5px;">⚡ 리스크 관리를 위한 실시간 주식 계산기 모음</p>
     <div class="calc-grid" style="display: flex; flex-direction: column; gap: 12px;">
-        <a href="{URL_물타기}" style="display: block; background: #2563eb; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); box-sizing: border-box;">
+        <a href="{URL_물타기}" target="_blank" style="display: block; background: #2563eb; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[📉 주식 물타기 계산기 실행하기]</span>
             <span style="display: block; font-size: 15px; color: #bfdbfe; margin-top: 6px; font-weight: 700;">보유 종목 평단가 낮추기 및 추가 매수 시뮬레이션</span>
         </a>
-        <a href="{URL_손절익절}" style="display: block; background: #0d9488; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2); box-sizing: border-box;">
+        <a href="{URL_손절익절}" target="_blank" style="display: block; background: #0d9488; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[💰 익절 / 손절가 기준 계산기]</span>
             <span style="display: block; font-size: 15px; color: #ccfbf1; margin-top: 6px; font-weight: 700;">단타 실전 매매 맞춤형 목표가 및 유상 설정</span>
         </a>
-        <a href="{URL_복리}" style="display: block; background: #4f46e5; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); box-sizing: border-box;">
+        <a href="{URL_복리}" target="_blank" style="display: block; background: #4f46e5; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[📈 연복리 자산 성장 시뮬레이터]</span>
             <span style="display: block; font-size: 15px; color: #e0e7ff; margin-top: 6px; font-weight: 700;">장기 투자 및 복리 마법 기반 미래 자산 예측</span>
         </a>
-        <a href="{URL_환율}" style="display: block; background: #334155; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(51, 65, 85, 0.2); box-sizing: border-box;">
+        <a href="{URL_환율}" target="_blank" style="display: block; background: #334155; border-radius: 12px; padding: 22px 10px; text-align: center; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(51, 65, 85, 0.2); box-sizing: border-box;">
             <span style="display: block; font-size: 25px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">[🎯 미국주식 실시간 환율 계산기]</span>
             <span style="display: block; font-size: 15px; color: #cbd5e1; margin-top: 6px; font-weight: 700;">해외주식 양도소득세 및 환율 변동성 체크</span>
         </a>
