@@ -295,19 +295,20 @@ def main():
     b2_html = body2.replace('\n', '<br>')
     b3_html = body3.replace('\n', '<br>')
 
-    # 🏗️ 중간 계산기 보드와 하단 CTA 박스의 레이아웃 배치 완전 영구 고정
+# 🏗️ 중간 계산기 보드와 하단 CTA 박스의 레이아웃 배치 완전 영구 고정 (상단 광고 최적화 버전)
     final_html = (
         f'<div style="text-align:center; margin-bottom:25px;"><img src="{img_url1}" alt="Market Update Part 1" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/></div>'
-        f'<h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub1}</h3>'
+        f'{ADSENSE_CODE}'  # 🚀 [최상단 정석 배치] 첫 이미지 바로 아래, 글 시작하기 전에 고단가 광고 노출!
+        f'<h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 25px; margin-bottom: 20px;">{sub1}</h3>'
         f'<div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b1_html}</div>'
-        f'{ADSENSE_CODE}{CALCULATOR_BOARD_CODE}'
+        f'{CALCULATOR_BOARD_CODE}'  # 중간 광고를 위로 올렸으므로 여기서는 깔끔하게 계산기 보드로 유저 집중
         f'<div style="text-align:center; margin-bottom:25px; margin-top:35px;"><img src="{img_url2}" alt="Market Update Part 2" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/></div>'
         f'<h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub2}</h3>'
         f'<div class="post-p2" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b2_html}</div>'
         f'<div style="text-align:center; margin-bottom:25px; margin-top:35px;"><img src="{img_url3}" alt="Market Update Part 3" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/></div>'
         f'<h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub3}</h3>'
         f'<div class="post-p3" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b3_html}</div>'
-        f'{ADSENSE_CODE}{CTA_CODE}'
+        f'{ADSENSE_CODE}{CTA_CODE}'  # [하단 배치] 마지막 글이 끝나고 광고 노출 후 하단 행동유도(CTA)로 연결
     )
 
     scheduled_publish_time = calculate_scheduled_time()
