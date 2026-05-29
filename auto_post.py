@@ -40,12 +40,23 @@ from google import genai
 from google.genai import types  
 
 # =====================================================================
-# ⚙️ 고유 설정 정보 (유저님 세팅 완벽 반영 및 무결성 검증)
+# ⚙️ 고유 설정 정보 (8개 RSS 주소 완벽 반영 및 무결성 검증)
 # =====================================================================
 BLOG_ID = "347204372769511011"  
 GOOGLE_ADSENSE_CLIENT = "ca-pub-4292478378917157"
 GOOGLE_ADSENSE_SLOT = "5317754949"
-GOOGLE_ALERT_RSS_URL = "https://www.google.co.kr/alerts/feeds/13793017153619247481/11360882853986229297"
+
+# 🔗 구글 알리미 복수 RSS 피드 주소 리스트 (총 8개 완벽 통합)
+GOOGLE_ALERT_RSS_URLS = [
+    "https://www.google.co.kr/alerts/feeds/13793017153619247481/11360882853986229297",  # 기존 피드
+    "https://www.google.co.kr/alerts/feeds/13793017153619247481/6920293583916476350",     # 추가 피드 1
+    "https://www.google.co.kr/alerts/feeds/13793017153619247481/14642687874364656262",    # 추가 피드 2
+    "https://www.google.co.kr/alerts/feeds/13793017153619247481/15677364953719324839",    # 추가 피드 3
+    "https://www.google.co.kr/alerts/feeds/13793017153619247481/6920293583916476340",     # 추가 피드 4
+    "https://www.google.co.kr/alerts/feeds/13793017153619247481/15677364953719326324",    # 추가 피드 5
+    "https://www.google.co.kr/alerts/feeds/13793017153619247481/6920293583916477680",     # 추가 피드 6
+    "https://www.google.co.kr/alerts/feeds/13793017153619247481/6920293583916478309"      # 추가 피드 7
+]
 
 GITHUB_USER_ID = "rorhkdcns"  
 GITHUB_REPO_NAME = "blogger-auto-post"  
@@ -71,15 +82,28 @@ URL_복리 = "https://invest.gwangchoon.com/2026/05/10-1.html"
 URL_환율 = "https://invest.gwangchoon.com/2026/05/blog-post_989.html"
 
 def fetch_google_alerts_news():
-    print("📡 구글 알리미 주식 RSS 피드 수집 중...")
-    feed = feedparser.parse(GOOGLE_ALERT_RSS_URL)
+    print("📡 등록된 8개의 구글 알리미 주식 RSS 피드 수집 시작...")
     news_content = ""
-    for i, entry in enumerate(feed.entries[:5]):
-        title = html.escape(entry.title).replace('<b>', '').replace('</b>', '')
-        summary = html.escape(entry.summary).replace('<b>', '').replace('</b>', '')
-        news_content += f"\n[뉴스 {i+1}]\n제목: {title}\n요약: {summary}\n"
+    news_count = 1
+    
+    # 8개 피드를 순회하며 데이터 취합
+    for url in GOOGLE_ALERT_RSS_URLS:
+        try:
+            feed = feedparser.parse(url)
+            
+            # 피드 개수가 많으므로 피드당 가장 최신 뉴스 1개씩만 압축 수집하여 데이터 무결성 유지
+            for entry in feed.entries[:1]:
+                title = html.escape(entry.title).replace('<b>', '').replace('</b>', '')
+                summary = html.escape(entry.summary).replace('<b>', '').replace('</b>', '')
+                news_content += f"\n[시장 정보 {news_count}]\n제목: {title}\n요약: {summary}\n"
+                news_count += 1
+        except Exception as e:
+            print(f"⚠️ RSS 피드 수집 실패 (건너뛰기) -> {url}: {e}")
+            
     if not news_content.strip():
         news_content = "현재 국내외 주식 시장 시황 및 주요 거시 경제 지표 변동성 확대 현상 발생."
+        
+    print(f"✅ 총 {news_count-1}개의 교차 시장 뉴스 데이터를 성공적으로 병합했습니다.")
     return news_content
 
 def calculate_scheduled_time():
@@ -123,7 +147,6 @@ CTA_CODE = """
 </div>
 """
 
-# 🎯 [무결성 새 창 열기 교정 완료] 4가지 <a> 태그 내부에 target="_blank"를 정확하게 심었습니다.
 CALCULATOR_BOARD_CODE = f"""
 <div id="calc-board-top" class="calc-board-container" style="margin: 40px 0; padding: 20px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
     <p style="margin: 0 0 20px 0; font-size: 20px; font-weight: 900; color: #0f172a; text-align: center; letter-spacing: -0.5px;">⚡ 리스크 관리를 위한 실시간 주식 계산기 모음</p>
@@ -159,21 +182,21 @@ def generate_blog_content(news_data):
         "아래 주식 투자 뉴스 데이터를 기반으로 블로그 포스팅용 전문 시황 분석 글을 작성해줘.\n\n"
         f"[뉴스 데이터]\n{news_data}\n\n"
         "[필수 작성 지침]\n"
-"1. [제목 법칙]: 실전 SEO 키워드와 구체적인 수치를 조합하여 정보성 가치가 드러나는 강력한 제목을 구성하라. (예: 삼성전자 7만 원대 대응 전략, 지금 당장 계산해봐야 할 3가지)\n\n"
-"2. [설득 흐름]: 독자의 문제를 인식시키고 위기감을 조성한 뒤, 논리적인 해결책으로 유도하라.\n"
-"   - 문제 제기: 시장의 변화나 데이터로 독자의 공감을 유도하라.\n"
-"   - 위기 증폭: 상황을 방치했을 때의 잠재적 손실을 수치로 제시하라.\n"
-"   - 해결책 제시: 위기를 극복할 수 있는 구체적인 투자 방향을 제시하라.\n"
-"   - 행동 유도: 블로그 내 계산기 툴을 활용하여 독자가 스스로 수치를 확인하도록 강력하게 권장하라.\n"
-"   - 절대 금지: 본문 그 어디에도 '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화'라는 영문/국문 단어를 절대로 쓰지 마라.\n\n"
-"3. [가독성 법칙]: 모바일 화면 최적화를 위해 짧은 문장 위주로 작성하고, 2-3문장마다 문단을 나누어라. 본문에 대괄호나 불필요한 특수기호를 절대 사용하지 마라.\n\n"
-"4. [강조 법칙]: 시장의 핵심 용어 및 투자 판단의 근거가 되는 지표는 반드시 구글 표준 <b><font color=\"#e11d48\">중요키워드</font></b> 양식으로만 강조하라. 문장 전체가 아닌 핵심 데이터에만 적용하라.\n\n"
-"5. [파트 구성]: 본문은 무조건 3개의 파트로 나누고 정보성 소제목을 확실히 부여하라.\n"
-"   - 1단계: 시장 현황, 뉴스 데이터, 수치적 변화를 객관적으로 분석하라.\n"
-"   - 2단계: 위 사실이 개인 투자자의 자산에 미치는 영향과 위험을 서술하라.\n"
-"   - 3단계: 준비된 계산기 툴을 활용하여 대응 수치를 직접 계산해 보도록 강력히 유도하라.\n\n"
-"6. [시각화]: 영문 이미지 검색 키워드를 IMAGE_PROMPT에 직관적인 2-3단어 명사로 추천하라.\n\n"
-"7. [태그 추출]: 검색 의도가 반영된 구체적인 주식 키워드를 3-5개 추출해라. (쉼표 구분)\n\n"
+        "1. [제목 법칙]: 실전 SEO 키워드와 구체적인 수치를 조합하여 정보성 가치가 드러나는 강력한 제목을 구성하라. (예: 삼성전자 7만 원대 대응 전략, 지금 당장 계산해봐야 할 3가지)\n\n"
+        "2. [설득 흐름]: 독자의 문제를 인식시키고 위기감을 조성한 뒤, 논리적인 해결책으로 유도하라.\n"
+        "   - 문제 제기: 시장의 변화나 데이터로 독자의 공감을 유도하라.\n"
+        "   - 위기 증폭: 상황을 방치했을 때의 잠재적 손실을 수치로 제시하라.\n"
+        "   - 해결책 제시: 위기를 극복할 수 있는 구체적인 투자 방향을 제시하라.\n"
+        "   - 행동 유도: 블로그 내 계산기 툴을 활용하여 독자가 스스로 수치를 확인하도록 강력하게 권장하라.\n"
+        "   - 절대 금지: 본문 그 어디에도 '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화'라는 영문/국문 단어를 절대로 쓰지 마라.\n\n"
+        "3. [가독성 법칙]: 모바일 화면 최적화를 위해 짧은 문장 위주로 작성하고, 2-3문장마다 문단을 나누어라. 본문에 대괄호나 불필요한 특수기호를 절대 사용하지 마라.\n\n"
+        "4. [강조 법칙]: 시장의 핵심 용어 및 투자 판단의 근거가 되는 지표는 반드시 구글 표준 <b><font color=\"#e11d48\">중요키워드</font></b> 양식으로만 강조하라. 문장 전체가 아닌 핵심 데이터에만 적용하라.\n\n"
+        "5. [파트 구성]: 본문은 무조건 3개의 파트로 나누고 정보성 소제목을 확실히 부여하라.\n"
+        "   - 1단계: 시장 현황, 뉴스 데이터, 수치적 변화를 객관적으로 분석하라.\n"
+        "   - 2단계: 위 사실이 개인 투자자의 자산에 미치는 영향과 위험을 서술하라.\n"
+        "   - 3단계: 준비된 계산기 툴을 활용하여 대응 수치를 직접 계산해 보도록 강력히 유도하라.\n\n"
+        "6. [시각화]: 영문 이미지 검색 키워드를 IMAGE_PROMPT에 직관적인 2-3단어 명사로 추천하라.\n\n"
+        "7. [태그 추출]: 검색 의도가 반영된 구체적인 주식 키워드를 3-5개 추출해라. (쉼표 구분)\n\n"
         "[출력 포맷 고정]\n"
         "[TITLE]: 실전 주식 자극적 제목\n"
         "[TAGS]: 주식투자, 재테크, 국내증시\n"
@@ -259,7 +282,6 @@ def main():
     sub2 = clean_html_garbage(sub2)
     sub3 = clean_html_garbage(sub3)
 
-    # 🛡️ Gemini의 전체 통합 출력에 대응하는 무결성 강제 3분할 로직
     if not body2.strip() and not body3.strip():
         print("⚠️ [경고] Gemini가 포맷을 이탈하여 전체 글을 통째로 출력했습니다. 강제 파싱을 시작합니다.")
         paragraphs = [p.strip() for p in body1.split('\n') if p.strip()]
@@ -274,11 +296,8 @@ def main():
             body2 = "시장 변동성에 따른 자산 방어 전략 수립이 시급한 시점입니다."
             body3 = "정확한 데이터를 기반으로 리스크를 관리하고 안정적인 수익을 누리세요."
 
-    # 🔗 [라벨 누적 부활 방어 시스템 가동]
     ai_tags = [t.strip() for t in tags_raw.replace('`','').replace('**','').split(',') if t.strip()]
     fixed_tags = ['주식투자', '재테크', '국내증시']
-    
-    # 두 리스트를 결합한 후 set으로 중복을 제거하여 항상 고정 라벨이 포함되도록 조치
     tags = list(set(ai_tags + fixed_tags))
 
     sample_count = min(3, len(github_images_pool))
@@ -295,20 +314,19 @@ def main():
     b2_html = body2.replace('\n', '<br>')
     b3_html = body3.replace('\n', '<br>')
 
-# 🏗️ 중간 계산기 보드와 하단 CTA 박스의 레이아웃 배치 완전 영구 고정 (상단 광고 최적화 버전)
     final_html = (
         f'<div style="text-align:center; margin-bottom:25px;"><img src="{img_url1}" alt="Market Update Part 1" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/></div>'
-        f'{ADSENSE_CODE}'  # 🚀 [최상단 정석 배치] 첫 이미지 바로 아래, 글 시작하기 전에 고단가 광고 노출!
+        f'{ADSENSE_CODE}'  
         f'<h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 25px; margin-bottom: 20px;">{sub1}</h3>'
         f'<div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b1_html}</div>'
-        f'{CALCULATOR_BOARD_CODE}'  # 중간 광고를 위로 올렸으므로 여기서는 깔끔하게 계산기 보드로 유저 집중
+        f'{CALCULATOR_BOARD_CODE}'  
         f'<div style="text-align:center; margin-bottom:25px; margin-top:35px;"><img src="{img_url2}" alt="Market Update Part 2" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/></div>'
         f'<h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub2}</h3>'
         f'<div class="post-p2" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b2_html}</div>'
         f'<div style="text-align:center; margin-bottom:25px; margin-top:35px;"><img src="{img_url3}" alt="Market Update Part 3" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/></div>'
         f'<h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 15px; margin-bottom: 20px;">{sub3}</h3>'
         f'<div class="post-p3" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b3_html}</div>'
-        f'{ADSENSE_CODE}{CTA_CODE}'  # [하단 배치] 마지막 글이 끝나고 광고 노출 후 하단 행동유도(CTA)로 연결
+        f'{ADSENSE_CODE}{CTA_CODE}'  
     )
 
     scheduled_publish_time = calculate_scheduled_time()
