@@ -221,18 +221,43 @@ def generate_blog_content(news_data):
                     
     raise RuntimeError("🚨 데이터 생성 실패")
 
-# 👇 [추가된 부분 1] 중복 방지 체크 함수
+# 👇 이 함수 부분만 교체해 주세요!
 def check_already_posted(blogger, blog_id):
     kst = datetime.timezone(datetime.timedelta(hours=9))
-    today_str = datetime.datetime.now(kst).strftime('%Y-%m-%d')
+    now = datetime.datetime.now(kst)
+    today_str = now.strftime('%Y-%m-%d')
+    
     try:
         posts = blogger.posts().list(blogId=blog_id, maxResults=5).execute()
+        today_post_count = 0
+        
         for item in posts.get('items', []):
-            if item.get('published', '')[:10] == today_str:
-                return True
+            pub_str = item.get('published', '')
+            
+            # 1. 오늘 날짜에 쓰여진 글 개수 카운트
+            if pub_str.startswith(today_str):
+                today_post_count += 1
+                
+                # 2. 가장 최근 글이 '2시간 이내'에 올라왔는지 확인 (동시간대 중복 차단)
+                try:
+                    pub_time = datetime.datetime.fromisoformat(pub_str).astimezone(kst)
+                    time_diff_hours = (now - pub_time).total_seconds() / 3600
+                    
+                    if time_diff_hours < 2.0:
+                        print(f"⏳ 최근 2시간 이내에 이미 글이 발행되었습니다. 중복 실행을 차단합니다.")
+                        return True # 발행 중단
+                except ValueError:
+                    pass
+        
+        # 3. 오늘 하루 목표치인 4개를 다 채웠는지 확인
+        if today_post_count >= 4:
+            print("🛑 오늘 하루 4개 포스팅을 모두 완료했습니다.")
+            return True # 발행 중단
+            
     except Exception as e:
         print(f"⚠️ 중복 체크 오류: {e}")
-    return False
+        
+    return False # 문제 없으므로 발행 진행!
 
 def main():
     b64_token = os.environ.get("TOKEN_PICKLE_BASE64")
