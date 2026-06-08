@@ -228,7 +228,7 @@ def check_already_posted(blogger, blog_id):
     today_str = now.strftime('%Y-%m-%d')
     
     try:
-        posts = blogger.posts().list(blogId=blog_id, maxResults=5).execute()
+        posts = blogger.posts().list(blogId=blog_id, maxResults=10).execute()
         today_post_count = 0
         
         for item in posts.get('items', []):
