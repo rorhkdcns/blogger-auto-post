@@ -221,6 +221,19 @@ def generate_blog_content(news_data):
                     
     raise RuntimeError("🚨 데이터 생성 실패")
 
+# 👇 [추가된 부분 1] 중복 방지 체크 함수
+def check_already_posted(blogger, blog_id):
+    kst = datetime.timezone(datetime.timedelta(hours=9))
+    today_str = datetime.datetime.now(kst).strftime('%Y-%m-%d')
+    try:
+        posts = blogger.posts().list(blogId=blog_id, maxResults=5).execute()
+        for item in posts.get('items', []):
+            if item.get('published', '')[:10] == today_str:
+                return True
+    except Exception as e:
+        print(f"⚠️ 중복 체크 오류: {e}")
+    return False
+
 def main():
     b64_token = os.environ.get("TOKEN_PICKLE_BASE64")
     if not b64_token:
@@ -229,6 +242,11 @@ def main():
         
     creds = pickle.loads(base64.b64decode(b64_token))
     blogger = build('blogger', 'v3', credentials=creds)
+    
+    # 👇 [추가된 부분 2] 실행 시 오늘 이미 글이 발행되었는지 확인 후 중단
+    if check_already_posted(blogger, BLOG_ID):
+        print(f"⏩ 오늘({datetime.datetime.now().date()}) 이미 포스팅이 확인되었습니다. 중복 방지를 위해 작업을 종료합니다.")
+        return
     
     google_alerts_stock_news = fetch_google_alerts_news()
     ai_raw = generate_blog_content(google_alerts_stock_news)
