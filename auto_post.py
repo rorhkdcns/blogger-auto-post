@@ -379,7 +379,7 @@ def main():
     img_url2 = f"{base_url_clean}{chosen_images[1].strip()}" if sample_count >= 2 else "https://placehold.co/800x450/0d9488/ffffff/png?text=STOCK+IMAGE+2"
     img_url3 = f"{base_url_clean}{chosen_images[2].strip()}" if sample_count >= 3 else "https://placehold.co/800x450/4f46e5/ffffff/png?text=STOCK+IMAGE+3"
     
-print(f"🎲 [실시간 이미지 매칭 확정]: {chosen_images}")
+    print(f"🎲 [실시간 이미지 매칭 확정]: {chosen_images}")
     
     # 💡 가독성 극대화를 위한 문단(Paragraph) 포매팅 함수
     def format_paragraphs(text):
