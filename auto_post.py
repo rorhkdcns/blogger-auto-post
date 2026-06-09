@@ -379,11 +379,16 @@ def main():
     img_url2 = f"{base_url_clean}{chosen_images[1].strip()}" if sample_count >= 2 else "https://placehold.co/800x450/0d9488/ffffff/png?text=STOCK+IMAGE+2"
     img_url3 = f"{base_url_clean}{chosen_images[2].strip()}" if sample_count >= 3 else "https://placehold.co/800x450/4f46e5/ffffff/png?text=STOCK+IMAGE+3"
     
-    print(f"🎲 [실시간 이미지 매칭 확정]: {chosen_images}")
+print(f"🎲 [실시간 이미지 매칭 확정]: {chosen_images}")
     
-    b1_html = body1.replace('\n', '<br>')
-    b2_html = body2.replace('\n', '<br>')
-    b3_html = body3.replace('\n', '<br>')
+    # 💡 가독성 극대화를 위한 문단(Paragraph) 포매팅 함수
+    def format_paragraphs(text):
+        paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
+        return "".join([f'<p style="margin-bottom: 22px; word-break: keep-all; line-height: 1.8;">{p}</p>' for p in paragraphs])
+
+    b1_html = format_paragraphs(body1)
+    b2_html = format_paragraphs(body2)
+    b3_html = format_paragraphs(body3)
 
     final_html = (
         f'<div style="text-align:center; margin-bottom:25px;"><img src="{img_url1}" alt="Market Update Part 1" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/></div>'
