@@ -45,7 +45,6 @@ GOOGLE_ADSENSE_CLIENT = "ca-pub-4292478378917157"
 GOOGLE_ADSENSE_SLOT = "5317754949"
 
 # 📚 [핵심 변경 1] 뉴스 RSS 대신 장기적으로 트래픽이 쌓이는 정보성/에버그린 키워드 풀
-# 📚 [확장된 정보성/에버그린 키워드 풀] - 총 140개 이상 완벽 세팅
 STOCK_INFO_KEYWORDS = [
     "주식초보", "주린이 첫걸음", "주식투자 시작하기", "주식 계좌 개설 방법", "증권사 추천", 
     "주식 거래 시간", "시간외 단일가 매매", "주식 용어 정리", "예수금 뜻", "미수금 위험성", 
@@ -115,7 +114,7 @@ def get_unique_target_keyword(blogger, blog_id):
     random.shuffle(shuffled_keywords)
     
     for keyword in shuffled_keywords:
-        short_keyword = keyword.split(" ")[0] # 예: "주식" 등 첫 단어
+        short_keyword = keyword.split(" ")[0]
         is_duplicated = False
         
         for r_title in recent_titles:
@@ -197,8 +196,6 @@ CALCULATOR_BOARD_CODE = f"""
 </div>
 """
 
-
-# 🧠 [핵심 변경 3] 뉴스가 아닌 '정보성 가이드 지식'을 생산하도록 프롬프트 전면 수정
 def generate_blog_content(target_keyword):
     api_key_direct = os.environ.get("API_KEY")
     client = genai.Client(
@@ -216,7 +213,7 @@ def generate_blog_content(target_keyword):
         "   - AI 특유의 만연체(길게 늘어쓰는 텍스트 벽)를 절대 금지한다. 모든 문장은 핵심만 짧고 간결하게 끊어 써라.\n"
         "   - 스마트폰 화면에서 답답해 보이지 않도록, 하나의 문단은 절대 2~3문장을 넘기지 말고 과감하게 줄바꿈하라.\n"
         "   - 정보나 특징, 장단점을 나열할 때는 줄글로 풀지 말고, 반드시 글머리기호(-, 1. 2. 3. 등)를 사용하여 직관적으로 요약하라.\n"
-        "   - 핵심 개념을 비교하거나 정리할 때는 표(Table)를 쓰지 말고, [개념 이름], [핵심 특징], [주의점] 등을 **볼드체 블록** 형태로 줄바꿈하여 한눈에 들어오게 정리하라.\n\n"
+        "   - 본문 파트 중 핵심 개념을 비교하거나 정리하는 구간에는 반드시 마크다운 표(Table) 양식(`|제목|내용|` 형태)을 1회 이상 삽입하여 시각적으로 정돈하라.\n\n"
         "3. [강조 및 시선 유도 법칙]:\n"
         "   - 독자가 스크롤만 빠르게 훑어봐도 내용을 파악할 수 있도록, 문단 내 가장 중요한 핵심 문장에는 마크다운 **볼드체**를 적용하라.\n"
         "   - 전체 글을 통틀어 가장 핵심적인 수치나 데이터 딱 2~3개에만 구글 표준 <b><font color=\"#e11d48\">중요데이터</font></b> 양식을 적용하라.\n\n"
@@ -226,7 +223,7 @@ def generate_blog_content(target_keyword):
         "   - 절대 금지어: 본문 어디에도 '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략'은 쓰지 마라.\n\n"
         "5. [파트 구성]: 본문은 구조적 완성도를 위해 3개의 파트로 명확히 나누고, 직관적인 소제목을 부여하라.\n"
         "   - 1단계 (개념과 원인): 이 주제가 왜 중요하며 흔히 저지르는 실수는 무엇인지 짧게 분석.\n"
-        "   - 2단계 (실전 위협과 분석): 리스크가 평단가에 미치는 위협. (이 부분에 글머리기호나 볼드체 블록을 적극 활용하여 가독성을 높일 것)\n"
+        "   - 2단계 (실전 위협과 분석): 리스크가 평단가에 미치는 위협. (이 부분에 표나 리스트를 적극 활용하여 가독성을 높일 것)\n"
         "   - 3단계 (대응 가이드): 투자자가 취해야 할 객관적인 실천 방향 제안.\n\n"
         "6. [시각화]: 영문 이미지 검색 키워드를 IMAGE_PROMPT에 직관적인 2-3단어 명사로 추천하라.\n\n"
         "7. [태그 추출]: 본문 내용과 밀접하며 실제 검색 유입 의도가 반영된 구체적인 주식 키워드를 3개만 추출해라. (쉼표 구분)\n\n"
@@ -240,7 +237,7 @@ def generate_blog_content(target_keyword):
         "[SUB_TITLE_1]: 소제목1\n"
         "[BODY_1]: 내용1 (짧은 문장, 볼드체, 초보자 눈높이 쉬운 설명 활용)\n"
         "[SUB_TITLE_2]: 소제목2\n"
-        "[BODY_2]: 내용2 (표 대신 볼드체 블록과 리스트 활용, 가독성 극대화)\n"
+        "[BODY_2]: 내용2 (표 반드시 삽입, 가독성 극대화)\n"
         "[SUB_TITLE_3]: 소제목3\n"
         "[BODY_3]: 내용3 (객관적 실천 방향)"
     )
@@ -271,30 +268,27 @@ def check_already_posted(blogger, blog_id):
         for item in posts.get('items', []):
             pub_str = item.get('published', '')
             
-            # 1. 오늘 날짜에 쓰여진 글 개수 카운트
             if pub_str.startswith(today_str):
                 today_post_count += 1
                 
-                # 2. 가장 최근 글이 '2시간 이내'에 올라왔는지 확인 (동시간대 중복 차단)
                 try:
                     pub_time = datetime.datetime.fromisoformat(pub_str).astimezone(kst)
                     time_diff_hours = (now - pub_time).total_seconds() / 3600
                     
                     if time_diff_hours < 2.0:
                         print(f"⏳ 최근 2시간 이내에 이미 글이 발행되었습니다. 중복 실행을 차단합니다.")
-                        return True # 발행 중단
+                        return True 
                 except ValueError:
                     pass
         
-        # 3. 오늘 하루 목표치인 4개를 다 채웠는지 확인
         if today_post_count >= 4:
             print("🛑 오늘 하루 4개 포스팅을 모두 완료했습니다.")
-            return True # 발행 중단
+            return True 
             
     except Exception as e:
         print(f"⚠️ 중복 체크 오류: {e}")
         
-    return False # 문제 없으므로 발행 진행!
+    return False
 
 def main():
     b64_token = os.environ.get("TOKEN_PICKLE_BASE64")
@@ -309,7 +303,6 @@ def main():
         print(f"⏩ 오늘({datetime.datetime.now().date()}) 이미 포스팅이 확인되었습니다. 중복 방지를 위해 작업을 종료합니다.")
         return
     
-    # [핵심 변경 4] 뉴스 RSS 수집 함수 대신, 키워드 추출 함수 실행 (blogger 권한 전달)
     target_keyword = get_unique_target_keyword(blogger, BLOG_ID)
     ai_raw = generate_blog_content(target_keyword)
     
@@ -388,10 +381,56 @@ def main():
     
     print(f"🎲 [실시간 이미지 매칭 확정]: {chosen_images}")
     
-    # 💡 가독성 극대화를 위한 문단(Paragraph) 포매팅 함수
+    # 💡 [핵심 변경] 마크다운 표를 HTML 디자인 표로 자동 변환해 주는 강력한 포매터
     def format_paragraphs(text):
-        paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
-        return "".join([f'<p style="margin-bottom: 22px; word-break: keep-all; line-height: 1.8;">{p}</p>' for p in paragraphs])
+        lines = text.split('\n')
+        processed_chunks = []
+        in_table = False
+        table_html = []
+
+        for line in lines:
+            clean_line = line.strip()
+            if not clean_line:
+                continue
+
+            # 마크다운 표 인식 (| 기호로 시작하고 끝나는 줄)
+            if clean_line.startswith('|') and clean_line.endswith('|'):
+                if not in_table:
+                    in_table = True
+                    table_html.append('<div style="overflow-x: auto; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 15px; border: 1px solid #cbd5e1; background: #fff;">')
+                
+                # 표 구분선 (예: |---| 또는 |:---:|) 무시
+                if re.match(r'^\|(?:[\s\-:]+\|)+$', clean_line):
+                    continue
+                
+                # 셀 데이터 추출
+                cells = [cell.strip() for cell in clean_line.split('|')[1:-1]]
+                table_html.append('<tr>')
+                for cell in cells:
+                    # 표의 첫 번째 줄(제목행)은 배경색과 볼드체 적용 (th)
+                    if len(table_html) == 2:
+                        table_html.append(f'<th style="border: 1px solid #cbd5e1; padding: 12px 15px; background-color: #f8fafc; color: #1e293b; font-weight: bold; text-align: center;">{cell}</th>')
+                    # 나머지 데이터 줄(td)
+                    else:
+                        table_html.append(f'<td style="border: 1px solid #cbd5e1; padding: 12px 15px; color: #475569; line-height: 1.6;">{cell}</td>')
+                table_html.append('</tr>')
+            else:
+                # 표가 끝났을 때 닫기 태그 처리
+                if in_table:
+                    in_table = False
+                    table_html.append('</table></div>')
+                    processed_chunks.append("".join(table_html))
+                    table_html = []
+                
+                # 일반 텍스트는 <p> 태그로 감싸기
+                processed_chunks.append(f'<p style="margin-bottom: 22px; word-break: keep-all; line-height: 1.8;">{clean_line}</p>')
+        
+        # 마지막 줄이 표인 채로 끝났을 경우의 닫기 처리
+        if in_table:
+            table_html.append('</table></div>')
+            processed_chunks.append("".join(table_html))
+            
+        return "".join(processed_chunks)
 
     b1_html = format_paragraphs(body1)
     b2_html = format_paragraphs(body2)
