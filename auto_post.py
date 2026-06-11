@@ -205,7 +205,7 @@ def generate_blog_content(target_keyword):
         http_options=types.HttpOptions(api_version="v1")
     )
     
-   prompt = (
+prompt = (
         "네가 10년 차 전업 투자자이자 전문 금융 칼럼니스트라고 가정하고, "
         f"제시된 핵심 키워드인 [{target_keyword}]에 대해 독자에게 깊이 있는 지식과 통찰을 제공하는 '정보성 가이드 글'을 작성해줘.\n\n"
         "[필수 작성 지침]\n"
