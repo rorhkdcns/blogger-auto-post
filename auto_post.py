@@ -248,7 +248,7 @@ def generate_blog_content(target_keyword):
         "3. 만약 8점 이하라고 판단되면, 부족한 부분을 스스로 보완하고 수정하여 9점 이상의 최종 결과물을 내놓아라.\n"
         "4. 모든 점검이 완료되었다면, [최종 결과물]이라는 태그와 함께 완벽한 글만 출력하라."
     )
-    )
+    
     
     target_models = ['gemini-2.5-flash', 'gemini-2.5-pro']
     for target_model in target_models:
