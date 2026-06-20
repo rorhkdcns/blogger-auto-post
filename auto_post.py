@@ -125,12 +125,20 @@ def get_unique_target_keyword(blogger, blog_id):
 
 def calculate_scheduled_time():
     kst = datetime.timezone(datetime.timedelta(hours=9))
-    now = datetime.datetime.now(kst) 
+    # 현재 시간보다 5분 미래로 강제 설정하여 API가 '과거'라고 판단하지 않게 함
+    now = datetime.datetime.now(kst) + datetime.timedelta(minutes=5) 
     today = now.date()
+    
+    # 9시, 11시, 13시, 15시, 17시, 19시, 21시 중 가장 가까운 미래 찾기
     candidates = [datetime.datetime.combine(today, datetime.time(h, random.randint(1, 15)), tzinfo=kst) for h in [9, 11, 13, 15, 17, 19, 21]]
+    
+    # 지금보다 최소 5분 뒤의 시간 중 가장 빠른 시간 선택
     scheduled_time = next((c for c in candidates if c > now), None)
+    
     if not scheduled_time:
-        scheduled_time = datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time(9, 0), tzinfo=kst)
+        # 오늘 다 지났으면 내일 9시로 예약
+        scheduled_time = datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time(9, random.randint(1, 15)), tzinfo=kst)
+        
     return scheduled_time.strftime('%Y-%m-%dT%H:%M:%S+09:00')
 
 ADSENSE_CODE = """
@@ -175,20 +183,65 @@ CALCULATOR_BOARD_CODE = f"""
 def generate_blog_content(target_keyword):
     api_key_direct = os.environ.get("API_KEY")
     client = genai.Client(api_key=api_key_direct, http_options=types.HttpOptions(api_version="v1"))
-    prompt = f"네가 10년 차 전문 금융 칼럼니스트라고 가정하고, [{target_keyword}]에 대해 깊이 있는 정보성 가이드 글을 작성해줘.\n\n" \
-             "[필수 지침]\n" \
-             "1. 모바일 가독성: 문단은 2~3문장 이내, 핵심 나열 시 반드시 마크다운 표(Table) 또는 글머리 기호 사용.\n" \
-             "2. 중요 강조: 핵심 수치 2~3개에 <b><font color=\"#e11d48\">중요데이터</font></b> 양식 적용.\n" \
-             "3. 금지어: '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략' 사용 금지.\n" \
-             "4. 글로벌 독자 대응: 블로그 최상단에 'Global Summary'를 구성(영어 2~3문장 요약 + 불릿 포인트 + 'Global Market Impact' 1문장 추가).\n\n" \
-             "[출력 포맷]\n[TITLE]: 제목\n[GLOBAL_SUMMARY]: (영어 요약)\n[TAGS]: 키워드\n[IMAGE_PROMPT]: 2-3단어 영어 키워드\n[SUB_TITLE_1]: 소제목\n[BODY_1]: 내용\n[SUB_TITLE_2]: 소제목\n[BODY_2]: 내용\n[SUB_TITLE_3]: 소제목\n[BODY_3]: 내용"
+    prompt = (
+        "네가 10년 차 전업 투자자이자 전문 금융 칼럼니스트라고 가정하고, "
+        f"제시된 핵심 키워드인 [{target_keyword}]에 대해 독자에게 깊이 있는 지식과 통찰을 제공하는 '정보성 가이드 글'을 작성해줘.\n\n"
+        "[필수 작성 지침]\n"
+        "1. [제목 법칙]: 검색 엔진(SEO)에 최적화된 신뢰성 높은 정보성 제목을 구성하라. "
+        "자극적인 낚시성 문구 대신, 유저들이 실제로 검색할 법한 핵심 키워드와 구체적인 해결책을 조합하라.\n\n"
+        "2. [극강의 모바일 가독성 법칙 - 매우 중요]:\n"
+        "   - AI 특유의 만연체(길게 늘어쓰는 텍스트 벽)를 절대 금지한다. 모든 문장은 핵심만 짧고 간결하게 끊어 써라.\n"
+        "   - 스마트폰 화면에서 답답해 보이지 않도록, 하나의 문단은 절대 2~3문장을 넘기지 말고 과감하게 줄바꿈하라.\n"
+        "   - 정보나 특징, 장단점을 나열할 때는 줄글로 풀지 말고, 반드시 글머리기호(-, 1. 2. 3. 등)를 사용하여 직관적으로 요약하라.\n"
+        "   - 본문 파트 중 핵심 개념을 비교하거나 정리하는 구간에는 반드시 마크다운 표(Table) 양식(`|제목|내용|` 형태)을 1회 이상 삽입하여 시각적으로 정돈하라.\n\n"
+        "3. [강조 및 시선 유도 법칙]:\n"
+        "   - 독자가 스크롤만 빠르게 훑어봐도 내용을 파악할 수 있도록, 문단 내 가장 중요한 핵심 문장에는 마크다운 **볼드체**를 적용하라.\n"
+        "   - 전체 글을 통틀어 가장 핵심적인 수치나 데이터 딱 2~3개에만 구글 표준 <b><font color=\"#e11d48\">중요데이터</font></b> 양식을 적용하라.\n\n"
+        "4. [에버그린 스토리텔링 흐름]:\n"
+        "   - 실시간 뉴스 요약이나 일시적 시황은 배제하고, 수년 뒤에 읽어도 가치 있는 투자 철학과 원리를 설명하라.\n"
+        "   - 유저가 불안감을 느끼는 지점에 공감하고 객관적인 가이드라인을 제시하되, 노골적인 계산기 사용 광고 문구는 피하라.\n"
+        "   - 절대 금지어: 본문 어디에도 '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략'은 쓰지 마라.\n\n"
+        "5. [파트 구성]: 본문은 구조적 완성도를 위해 3개의 파트로 명확히 나누고, 직관적인 소제목을 부여하라.\n"
+        "   - 1단계 (개념과 원인): 이 주제가 왜 중요하며 흔히 저지르는 실수는 무엇인지 짧게 분석.\n"
+        "   - 2단계 (실전 위협과 분석): 리스크가 평단가에 미치는 위협. (이 부분에 표나 리스트를 적극 활용하여 가독성을 높일 것)\n"
+        "   - 3단계 (대응 가이드): 투자자가 취해야 할 객관적인 실천 방향 제안.\n\n"
+        "6. [시각화]: 영문 이미지 검색 키워드를 IMAGE_PROMPT에 직관적인 2-3단어 명사로 추천하라.\n\n"
+        "7. [태그 추출]: 본문 내용과 밀접하며 실제 검색 유입 의도가 반영된 구체적인 주식 키워드를 3개만 추출해라. (쉼표 구분)\n\n"
+        "8. [초보자 맞춤 눈높이 법칙]: 독자는 주식에 대해 잘 모르는 왕초보라고 가정하라. "
+        "전문 용어(예: 펀더멘털, 뇌동매매, 지지선 등)를 사용할 때는 반드시 일상생활의 친숙한 비유(예: 건물의 뼈대, 바닥 확인 등)를 활용하거나, "
+        "문맥 속에 중학생도 이해할 수 있는 아주 쉬운 뜻풀이를 자연스럽게 녹여내라.\n\n"
+        "9. [글로벌 독자 대응]: 블로그 최상단(제목 바로 아래)에 반드시 'Global Summary' 섹션을 구성하라. "
+        "   - 내용을 영어로 2~3문장 요약하고, 핵심 정보는 불릿 포인트로 작성하라. "
+        "   - 'Global Market Impact'라는 소제목으로 해당 정보가 글로벌 투자자에게 주는 의미를 1문장 추가하라."
+        "[출력 포맷 고정]\n"
+        "[TITLE]: 신뢰감 있는 정보성 제목\n"
+        "[GLOBAL_SUMMARY]: (영어 요약 및 글로벌 임팩트 내용)\n"
+        "[TAGS]: 주식투자, 재테크, 국내증시\n"
+        "[IMAGE_PROMPT]: finance growth chart\n"
+        "[SUB_TITLE_1]: 소제목1\n"
+        "[BODY_1]: 내용1 (짧은 문장, 볼드체, 초보자 눈높이 쉬운 설명 활용)\n"
+        "[SUB_TITLE_2]: 소제목2\n"
+        "[BODY_2]: 내용2 (표 반드시 삽입, 가독성 극대화)\n"
+        "[SUB_TITLE_3]: 소제목3\n"
+        "[BODY_3]: 내용3 (객관적 실천 방향)"
+        "\n\n"
+        "[자기 검증 루프(Loop) 단계]\n"
+        "1. 작성한 글이 위 [필수 작성 지침]을 완벽히 준수했는지 10점 만점으로 스스로 채점하라.\n"
+        "2. 채점 기준: 가독성(문단 길이), SEO 키워드 포함, 금지어 사용 여부, 표 삽입 여부, 초보자 눈높이 설명.\n"
+        "3. 만약 8점 이하라고 판단되면, 부족한 부분을 스스로 보완하고 수정하여 9점 이상의 최종 결과물을 내놓아라.\n"
+        "4. 모든 점검이 완료되었다면, [최종 결과물]이라는 태그와 함께 완벽한 글만 출력하라."
+    )
     
     for model in ['gemini-2.5-flash', 'gemini-2.5-pro']:
         for attempt in range(3):
             try:
+                print(f"🤖 Gemini API 호출 중... (모델: {model}, 시도: {attempt+1}/3)")
                 response = client.models.generate_content(model=model, contents=prompt)
-                if response and response.text: return response.text
-            except: time.sleep(10)
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                print(f"⚠️ 지연 발생: {e}")
+                if attempt < 2: time.sleep(10)
     raise RuntimeError("🚨 데이터 생성 실패")
 
 def check_already_posted(blogger, blog_id):
@@ -219,7 +272,6 @@ def main():
     target_keyword = get_unique_target_keyword(blogger, BLOG_ID)
     ai_raw = generate_blog_content(target_keyword)
     
-    # 파싱
     title = re.sub(r'<[^>]*>', '', re_extract_line('TITLE', ai_raw, "투자 정보")).strip()
     tags = list(set([t.strip() for t in re_extract_line('TAGS', ai_raw, "주식투자").split(',')]))
     sub1, sub2, sub3 = re_extract_line('SUB_TITLE_1', ai_raw), re_extract_line('SUB_TITLE_2', ai_raw), re_extract_line('SUB_TITLE_3', ai_raw)
@@ -234,7 +286,6 @@ def main():
     body2 = extract_block(ai_raw, '[BODY_2]:', '[SUB_TITLE_3]')
     body3 = extract_block(ai_raw, '[BODY_3]:')
     
-    # 표 변환 함수
     def format_paragraphs(text):
         processed_chunks = []
         in_table = False
@@ -260,7 +311,6 @@ def main():
             processed_chunks.append("".join(table_html))
         return "".join(processed_chunks)
 
-    # 파싱 및 HTML 구성
     global_summary = re_extract_line('GLOBAL_SUMMARY', ai_raw, "")
     gs_html = format_paragraphs(global_summary) if global_summary else ""
     summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>' if gs_html else ""
