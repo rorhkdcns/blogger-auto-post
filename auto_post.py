@@ -230,8 +230,12 @@ def generate_blog_content(target_keyword):
         "8. [초보자 맞춤 눈높이 법칙]: 독자는 주식에 대해 잘 모르는 왕초보라고 가정하라. "
         "전문 용어(예: 펀더멘털, 뇌동매매, 지지선 등)를 사용할 때는 반드시 일상생활의 친숙한 비유(예: 건물의 뼈대, 바닥 확인 등)를 활용하거나, "
         "문맥 속에 중학생도 이해할 수 있는 아주 쉬운 뜻풀이를 자연스럽게 녹여내라.\n\n"
+        "9. [글로벌 독자 대응]: 블로그 최상단(제목 바로 아래)에 반드시 'Global Summary' 섹션을 구성하라. "
+        "   - 내용을 영어로 2~3문장 요약하고, 핵심 정보는 불릿 포인트로 작성하라. "
+        "   - 'Global Market Impact'라는 소제목으로 해당 정보가 글로벌 투자자에게 주는 의미를 1문장 추가하라."
         "[출력 포맷 고정]\n"
         "[TITLE]: 신뢰감 있는 정보성 제목\n"
+        "[GLOBAL_SUMMARY]: (영어 요약 및 글로벌 임팩트 내용)\n"  # 추가
         "[TAGS]: 주식투자, 재테크, 국내증시\n"
         "[IMAGE_PROMPT]: finance growth chart\n"
         "[SUB_TITLE_1]: 소제목1\n"
@@ -443,9 +447,14 @@ def main():
     b1_html = format_paragraphs(body1)
     b2_html = format_paragraphs(body2)
     b3_html = format_paragraphs(body3)
+    
+    # 1. 파싱 로직 추가 (여기에 추가하세요)
+    global_summary = re_extract_line('GLOBAL_SUMMARY', ai_raw, "")
+    gs_html = format_paragraphs(global_summary) if global_summary else ""
 
     final_html = (
         f'<div style="text-align:center; margin-bottom:25px;"><img src="{img_url1}" alt="Market Update Part 1" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/></div>'
+        f'{f"<div style=\"background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;\"><strong>Global Summary:</strong> {gs_html}</div>" if gs_html else ""}'
         f'{ADSENSE_CODE}'  
         f'<h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 25px; margin-bottom: 20px;">{sub1}</h3>'
         f'<div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b1_html}</div>'
