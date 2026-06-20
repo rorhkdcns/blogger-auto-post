@@ -448,13 +448,19 @@ def main():
     b2_html = format_paragraphs(body2)
     b3_html = format_paragraphs(body3)
     
-    # 1. 파싱 로직 추가 (여기에 추가하세요)
+   # 1. 파싱 로직 및 요약 변수 분리
     global_summary = re_extract_line('GLOBAL_SUMMARY', ai_raw, "")
     gs_html = format_paragraphs(global_summary) if global_summary else ""
+    
+    # 2. f-string 문법 오류 방지를 위해 div 태그를 별도 변수로 구성
+    summary_box = ""
+    if gs_html:
+        summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>'
 
+    # 3. final_html 구성 (수정 완료)
     final_html = (
         f'<div style="text-align:center; margin-bottom:25px;"><img src="{img_url1}" alt="Market Update Part 1" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"/></div>'
-        f'{f"<div style=\"background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;\"><strong>Global Summary:</strong> {gs_html}</div>" if gs_html else ""}'
+        f'{summary_box}'
         f'{ADSENSE_CODE}'  
         f'<h3 style="font-size: 20px; color: #1e3a8a; border-left: 5px solid #3b82f6; padding-left: 10px; margin-top: 25px; margin-bottom: 20px;">{sub1}</h3>'
         f'<div class="post-p1" style="font-size:16px; line-height:1.9; color:#334155; margin-bottom: 25px; letter-spacing: -0.3px;">{b1_html}</div>'
