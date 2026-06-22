@@ -259,18 +259,6 @@ def check_already_posted(blogger, blog_id):
     return False
 
 
-def format_paragraphs(text):
-    processed_chunks = []
-    in_table = False
-    table_html = []
-    for line in text.split('\n'):
-        line = line.strip()
-        if not line: continue
-        # ... (이하 기존 코드 그대로) ...
-    if in_table:
-        table_html.append('</table></div>')
-        processed_chunks.append("".join(table_html))
-    return "".join(processed_chunks)
 
 
 def main():
