@@ -136,7 +136,7 @@ CALCULATOR_BOARD_CODE = f"""
 """
 
 # =====================================================================
-# 🛠️ 모든 전역 보조 함수들 (여기에 format_paragraphs 배치 완료)
+# 🛠️ 보조 함수들
 # =====================================================================
 def re_extract_line(tag, text, default=""):
     pattern = r'\[?' + re.escape(tag) + r'\]?\s*:\s*(.*)'
@@ -147,10 +147,17 @@ def re_extract_line(tag, text, default=""):
                 return match.group(1).strip()
     return default
 
-def extract_flexible(text, start_tag):
-    pattern = rf"{re.escape(start_tag)}[:\s]*(.*?)(?=\[SUB_TITLE|\[BODY_1|\[BODY_2|\[BODY_3|\[GLOBAL_SUMMARY|\[자기 검증|$)"
+# ★★★ [진짜 구원투수] 소제목이 적힌 줄 다음부터 ~ 다음 마커 전까지 무조건 다 긁어오는 함수 ★★★
+def get_actual_body(text, sub_marker):
+    # sub_marker(예: "[SUB_TITLE_1]")가 포함된 줄 전체를 패스하고, 그 아랫줄부터 싹 다 캡처
+    pattern = rf"{re.escape(sub_marker)}[^\n]*\n(.*?)(?=\[IMAGE\]|\[SUB_TITLE|\[GLOBAL|\[자기|\Z)"
     match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
-    return match.group(1).strip() if match else ""
+    if match:
+        content = match.group(1).strip()
+        # 혹시 AI가 본문 맨 앞에 '[BODY_1]:' 이란 글자를 남겼을까봐 강제 삭제
+        content = re.sub(r'\[BODY_\d+\]\s*:\s*', '', content, flags=re.IGNORECASE)
+        return content.strip()
+    return ""
 
 def get_image_tag():
     return f'<div style="text-align:center; margin:20px 0;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>'
@@ -158,7 +165,6 @@ def get_image_tag():
 def replace_image_tags(text):
     return text.replace('[IMAGE]', get_image_tag())
 
-# [에러의 원인이었던 함수를 안전한 최상단에 고정 배치했습니다]
 def format_paragraphs(text):
     processed_chunks = []
     in_table = False
@@ -298,37 +304,38 @@ def main():
     target_keyword = get_unique_target_keyword(blogger, BLOG_ID)
     ai_raw = generate_blog_content(target_keyword)
     
-    # [1. 찌꺼기 문자열 사전 청소]
+    # 1. 찌꺼기 문자열 사전 청소
     ai_raw = ai_raw.replace('[최종 결과물]', '').replace('**', '').replace('```html', '').replace('```', '')
     
-    # [2. 안전한 데이터 추출]
+    # 2. 제목, 태그, 소제목 추출
     title = re.sub(r'<[^>]*>', '', re_extract_line('TITLE', ai_raw, "투자 정보")).strip()
     tags = list(set([t.strip() for t in re_extract_line('TAGS', ai_raw, "주식투자").split(',')]))
     
-    sub1 = extract_flexible(ai_raw, "[SUB_TITLE_1]")
-    sub2 = extract_flexible(ai_raw, "[SUB_TITLE_2]")
-    sub3 = extract_flexible(ai_raw, "[SUB_TITLE_3]")
+    sub1 = re_extract_line('SUB_TITLE_1', ai_raw, "투자 핵심 전략 1")
+    sub2 = re_extract_line('SUB_TITLE_2', ai_raw, "투자 핵심 전략 2")
+    sub3 = re_extract_line('SUB_TITLE_3', ai_raw, "투자 핵심 전략 3")
     
-    body1 = extract_flexible(ai_raw, "[BODY_1]")
-    body2 = extract_flexible(ai_raw, "[BODY_2]")
-    body3 = extract_flexible(ai_raw, "[BODY_3]")
+    # ★★★ 3. [진짜 원인 해결] 소제목 마커를 기준으로 그 아래 본문을 통째로 싹쓸이 포획! ★★★
+    body1 = get_actual_body(ai_raw, "[SUB_TITLE_1]")
+    body2 = get_actual_body(ai_raw, "[SUB_TITLE_2]")
+    body3 = get_actual_body(ai_raw, "[SUB_TITLE_3]")
 
-    # AI가 본문을 안 썼으면 강제 에러를 뿜어서 깃헙 액션이 다시 일하게 만듭니다.
-    if not body1 or not body2:
-        raise ValueError(f"🚨 본문 파싱 실패! AI가 글을 제대로 작성하지 않았습니다.\n[AI출력원본]:\n{ai_raw[:400]}")
+    # 검증: 본문이 진짜 10글자도 안 잡히면 강제 종료 후 재시도
+    if len(body1) < 10 or len(body2) < 10:
+        raise ValueError(f"🚨 본문 포획 실패! AI가 텍스트를 누락했거나 포맷이 다릅니다.\n[포획된 body1]: {body1}\n[AI 원본]:\n{ai_raw[:500]}")
 
     global_summary = re_extract_line('GLOBAL_SUMMARY', ai_raw, "")
     gs_html = format_paragraphs(global_summary) if global_summary else ""
     summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>' if gs_html else ""
     
-    # [3. 최종 HTML 조립]
+    # 4. 최종 HTML 조립
     final_html = get_image_tag() + summary_box + ADSENSE_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(replace_image_tags(body1))}' + \
                  CALCULATOR_BOARD_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(replace_image_tags(body2))}' + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(replace_image_tags(body3))}' + ADSENSE_CODE + CTA_CODE
 
-    # 혹시라도 HTML에 남아있을지 모르는 [SUB_TITLE_X] 괄호 찌꺼기 최종 삭제
+    # 혹시라도 HTML에 남아있을지 모르는 괄호 찌꺼기 최종 삭제
     final_html = re.sub(r'\[SUB_TITLE_\d+\]:?', '', final_html)
     final_html = re.sub(r'\[BODY_\d+\]:?', '', final_html)
 
