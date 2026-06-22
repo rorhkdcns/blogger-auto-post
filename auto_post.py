@@ -1,6 +1,7 @@
 import base64
 import datetime
 import html
+import json
 import os
 import pickle
 import random
@@ -138,34 +139,11 @@ CALCULATOR_BOARD_CODE = f"""
 # =====================================================================
 # 🛠️ 보조 함수들
 # =====================================================================
-def re_extract_line(tag, text, default=""):
-    pattern = r'\[?' + re.escape(tag) + r'\]?\s*:\s*(.*)'
-    for line in text.split('\n'):
-        if tag in line:
-            match = re.search(pattern, line, re.IGNORECASE)
-            if match:
-                return match.group(1).strip()
-    return default
-
-# ★★★ [진짜 구원투수] 소제목이 적힌 줄 다음부터 ~ 다음 마커 전까지 무조건 다 긁어오는 함수 ★★★
-def get_actual_body(text, sub_marker):
-    # sub_marker(예: "[SUB_TITLE_1]")가 포함된 줄 전체를 패스하고, 그 아랫줄부터 싹 다 캡처
-    pattern = rf"{re.escape(sub_marker)}[^\n]*\n(.*?)(?=\[IMAGE\]|\[SUB_TITLE|\[GLOBAL|\[자기|\Z)"
-    match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
-    if match:
-        content = match.group(1).strip()
-        # 혹시 AI가 본문 맨 앞에 '[BODY_1]:' 이란 글자를 남겼을까봐 강제 삭제
-        content = re.sub(r'\[BODY_\d+\]\s*:\s*', '', content, flags=re.IGNORECASE)
-        return content.strip()
-    return ""
-
 def get_image_tag():
-    return f'<div style="text-align:center; margin:20px 0;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>'
-
-def replace_image_tags(text):
-    return text.replace('[IMAGE]', get_image_tag())
+    return f'<div style="text-align:center; margin:25px 0;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>'
 
 def format_paragraphs(text):
+    if not text or not text.strip(): return ""
     processed_chunks = []
     in_table = False
     table_html = []
@@ -185,7 +163,7 @@ def format_paragraphs(text):
                 table_html.append('</table></div>')
                 processed_chunks.append("".join(table_html))
                 table_html = []
-            processed_chunks.append(f'<p style="margin-bottom:20px;">{line}</p>')
+            processed_chunks.append(f'<p style="margin-bottom:20px; line-height:1.7;">{line}</p>')
     if in_table:
         table_html.append('</table></div>')
         processed_chunks.append("".join(table_html))
@@ -220,52 +198,42 @@ def calculate_scheduled_time():
 def generate_blog_content(target_keyword):
     api_key_direct = os.environ.get("API_KEY")
     client = genai.Client(api_key=api_key_direct, http_options=types.HttpOptions(api_version="v1"))
+    
+    # AI에게 정규식 괄호 마커가 아닌, 완벽한 JSON 오브젝트 생성을 명령합니다.
     prompt = (
         "너는 10년 차 전업 투자자이자 전문 금융 칼럼니스트야. "
         f"[{target_keyword}]를 검색한 사용자의 의도를 완벽히 해결하는 '실전 가이드'를 작성해줘.\n\n"
         "[필수 작성 지침]\n"
-        "1. [제목 법칙]: 핵심 키워드와 함께 유저가 '내 궁금증이 바로 해결되겠구나'라고 느낄 수 있는 구체적인 가치를 담아라.\n\n"
-        "2. [이미지 배치 법칙 - 매우 중요]:\n"
-        "   - [SUB_TITLE_1], [SUB_TITLE_2], [SUB_TITLE_3] 바로 위에는 반드시 '[IMAGE]'라는 문구를 넣어라.\n"
-        "   - 글 중간에 시각적 환기점이 있어야 이탈률이 낮아지므로, 소제목 직전마다 반드시 이미지 공간을 확보할 것.\n\n"
-        "3. [극강의 모바일 가독성 - 절대 준수]:\n"
-        "   - 문장 길이를 극도로 짧게 유지하라. 1문장은 20자 내외로 끊어라.\n"
-        "   - 문단은 절대 2문장을 넘기지 마라. (엔터키를 과감하게 활용할 것)\n"
-        "   - '또한', '반면에', '결론적으로' 등 불필요한 접속사를 80% 이상 삭제하라.\n"
-        "   - 정보 나열은 반드시 리스트(-, 1. 2.)를 사용하고, 비교 분석은 표(Table)로 반드시 구현하라.\n\n"
-        "4. [스크롤 방지 장치]:\n"
-        "   - [BODY_1] 첫 문장에 사용자의 고민에 대한 즉각적인 공감과 해답을 제시하라.\n"
-        "   - 핵심 문장과 중요 수치는 반드시 **볼드체**와 <b><font color=\"#e11d48\">중요데이터</font></b> 양식을 적용해 시선을 뺏어라.\n\n"
-        "5. [금지어]: '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략' 절대 금지.\n\n"
-        "6. [구조 설계]:\n"
-        "   - [BODY_1]: 독자의 고민 공감 + 바로 확인 가능한 핵심 결론 (두괄식).\n"
-        "   - [BODY_2]: [초보자의 실수] vs [현명한 대응]을 2열 표로 대조하여 가독성 극대화.\n"
-        "   - [BODY_3]: 지금 당장 실천할 수 있는 객관적인 3가지 액션 가이드.\n\n"
-        "7. [시각화 및 태그]: IMAGE_PROMPT는 직관적인 명사 2-3개. 태그는 실제 검색량이 많은 구체적 키워드 3개.\n\n"
-        "8. [초보자 눈높이]: 전문 용어 사용 시 반드시 괄호를 열고 5자 이내의 쉬운 비유를 덧붙일 것.\n\n"
-        "9. [글로벌 독자 대응]: 블로그 최상단에 'Global Summary'를 영어로 3문장 작성하고, 소제목 'Global Market Impact' 추가.\n\n"
-        "[출력 포맷 고정]\n"
-        "[TITLE]: (제목)\n"
-        "[GLOBAL_SUMMARY]: (영문 요약)\n"
-        "[TAGS]: (키워드 3개)\n"
-        "[IMAGE_PROMPT]: (이미지 키워드)\n"
-        "[IMAGE]\n[SUB_TITLE_1]: (핵심 답변형 소제목)\n"
-        "[BODY_1]: (핵심 결론 우선 배치)\n"
-        "[IMAGE]\n[SUB_TITLE_2]: (비교 분석형 소제목)\n"
-        "[BODY_2]: (표 삽입 필수)\n"
-        "[IMAGE]\n[SUB_TITLE_3]: (액션 플랜형 소제목)\n"
-        "[BODY_3]: (실천 가이드)\n\n"
-        "[자기 검증 루프]:\n"
-        "1. 위 지침을 100% 준수했는지 스스로 체크하라.\n"
-        "2. 소제목 바로 위에 [IMAGE] 태그가 모두 포함되었는지 확인하라.\n"
-        "3. 모든 수정이 완료되면 [최종 결과물] 태그와 함께 출력하라."
+        "1. [제목]: 핵심 키워드와 함께 유저가 '내 궁금증이 바로 해결되겠구나'라고 느낄 수 있는 구체적인 가치를 담아라.\n"
+        "2. [모바일 가독성]: 문장은 20자 내외로 짧게 끊고, 불필요한 접속사(또한, 반면에 등)는 80% 이상 삭제하라. 정보 나열은 글머리기호(-, 1. 2.)를 쓰고 비교 분석은 마크다운 표(|제목|내용|)로 구현하라.\n"
+        "3. [스크롤 방지]: 1단계 본문 첫 문장에 사용자의 고민에 대한 즉각적인 공감과 해답을 제시하라. 핵심 문장에는 **볼드체**를 적용하라.\n"
+        "4. [금지어]: '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략' 절대 금지.\n"
+        "5. [초보자 눈높이]: 전문 용어 사용 시 반드시 괄호를 열고 쉬운 뜻풀이나 비유를 덧붙일 것.\n\n"
+        "반드시 아래의 JSON 규격에 맞춰서 작성하고, JSON 데이터 외에 다른 설명 텍스트나 마크다운 문법은 일절 출력하지 마라.\n"
+        "{\n"
+        '  "title": "신뢰감 있는 정보성 제목",\n'
+        '  "global_summary": "글로벌 투자자를 위한 영문 3문장 요약",\n'
+        '  "tags": ["주식투자", "재테크", "관련키워드"],\n'
+        '  "sub_title_1": "1단계 소제목 (개념과 원인)",\n'
+        '  "body_1": "1단계 본문 내용 (공감 및 핵심 답변 우선 배치)",\n'
+        '  "sub_title_2": "2단계 소제목 (실전 위협과 분석)",\n'
+        '  "body_2": "2단계 본문 내용 (비교 분석용 마크다운 표 반드시 삽입)",\n'
+        '  "sub_title_3": "3단계 소제목 (대응 가이드)",\n'
+        '  "body_3": "3단계 본문 내용 (객관적 실천 방향 제안)"\n'
+        "}"
+    )
+    
+    # 구원투수 설정: AI의 출력 엔진 자체를 'JSON 모드'로 강제 잠금 처리합니다.
+    config = types.GenerateContentConfig(
+        response_mime_type="application/json",
+        temperature=0.7
     )
     
     for model in ['gemini-2.5-flash', 'gemini-2.5-pro']:
         for attempt in range(3):
             try:
                 print(f"🤖 Gemini API 호출 중... (모델: {model}, 시도: {attempt+1}/3)")
-                response = client.models.generate_content(model=model, contents=prompt)
+                response = client.models.generate_content(model=model, contents=prompt, config=config)
                 if response and response.text:
                     return response.text
             except Exception as e:
@@ -302,48 +270,52 @@ def main():
     except: pass
     
     target_keyword = get_unique_target_keyword(blogger, BLOG_ID)
-    ai_raw = generate_blog_content(target_keyword)
+    ai_json_response = generate_blog_content(target_keyword)
     
-    # 1. 찌꺼기 문자열 사전 청소
-    ai_raw = ai_raw.replace('[최종 결과물]', '').replace('**', '').replace('```html', '').replace('```', '')
-    
-    # 2. 제목, 태그, 소제목 추출
-    title = re.sub(r'<[^>]*>', '', re_extract_line('TITLE', ai_raw, "투자 정보")).strip()
-    tags = list(set([t.strip() for t in re_extract_line('TAGS', ai_raw, "주식투자").split(',')]))
-    
-    sub1 = re_extract_line('SUB_TITLE_1', ai_raw, "투자 핵심 전략 1")
-    sub2 = re_extract_line('SUB_TITLE_2', ai_raw, "투자 핵심 전략 2")
-    sub3 = re_extract_line('SUB_TITLE_3', ai_raw, "투자 핵심 전략 3")
-    
-    # ★★★ 3. [진짜 원인 해결] 소제목 마커를 기준으로 그 아래 본문을 통째로 싹쓸이 포획! ★★★
-    body1 = get_actual_body(ai_raw, "[SUB_TITLE_1]")
-    body2 = get_actual_body(ai_raw, "[SUB_TITLE_2]")
-    body3 = get_actual_body(ai_raw, "[SUB_TITLE_3]")
+    # [1. 완벽한 JSON 파싱]
+    try:
+        # 혹시 AI가 ```json 껍데기를 씌워서 줬을 경우를 대비한 안전 탈곡기
+        clean_json = ai_json_response.replace('```json', '').replace('```', '').strip()
+        data = json.loads(clean_json)
+    except Exception as e:
+        raise ValueError(f"🚨 JSON 파싱 대참사 발생! AI가 규격을 어겼습니다.\n[에러]: {e}\n[AI가 보낸 원본]:\n{ai_json_response[:500]}")
 
-    # 검증: 본문이 진짜 10글자도 안 잡히면 강제 종료 후 재시도
-    if len(body1) < 10 or len(body2) < 10:
-        raise ValueError(f"🚨 본문 포획 실패! AI가 텍스트를 누락했거나 포맷이 다릅니다.\n[포획된 body1]: {body1}\n[AI 원본]:\n{ai_raw[:500]}")
+    title = data.get("title", f"{target_keyword} 핵심 가이드")
+    tags = data.get("tags", ["주식투자", "재테크"])
+    
+    sub1 = data.get("sub_title_1", "투자 핵심 전략 1")
+    body1 = data.get("body_1", "")
+    
+    sub2 = data.get("sub_title_2", "투자 핵심 전략 2")
+    body2 = data.get("body_2", "")
+    
+    sub3 = data.get("sub_title_3", "투자 핵심 전략 3")
+    body3 = data.get("body_3", "")
+    
+    global_summary = data.get("global_summary", "")
 
-    global_summary = re_extract_line('GLOBAL_SUMMARY', ai_raw, "")
+    # [2. 철저한 알맹이 검증]
+    if len(body1) < 15 or len(body2) < 15:
+        raise ValueError(f"🚨 본문 실종 에러! 껍데기 파싱은 성공했으나 본문 내용이 비어있습니다.\n[body1]: {body1}\n[body2]: {body2}")
+
     gs_html = format_paragraphs(global_summary) if global_summary else ""
     summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>' if gs_html else ""
     
-    # 4. 최종 HTML 조립
+    # [3. 소제목 바로 위마다 파이썬이 직접 강제 이미지 주입 (AI 의존 NO)]
     final_html = get_image_tag() + summary_box + ADSENSE_CODE + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(replace_image_tags(body1))}' + \
+                 get_image_tag() + \
+                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(body1)}' + \
                  CALCULATOR_BOARD_CODE + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(replace_image_tags(body2))}' + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(replace_image_tags(body3))}' + ADSENSE_CODE + CTA_CODE
-
-    # 혹시라도 HTML에 남아있을지 모르는 괄호 찌꺼기 최종 삭제
-    final_html = re.sub(r'\[SUB_TITLE_\d+\]:?', '', final_html)
-    final_html = re.sub(r'\[BODY_\d+\]:?', '', final_html)
+                 get_image_tag() + \
+                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(body2)}' + \
+                 get_image_tag() + \
+                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(body3)}' + ADSENSE_CODE + CTA_CODE
 
     try:
         blogger.posts().insert(blogId=BLOG_ID, body={'title': title, 'content': final_html, 'labels': tags, 'published': calculate_scheduled_time()}, isDraft=False).execute()
-        print("✅ 포스팅 완벽 발행 완료!")
+        print("✅ 포스팅 규격화 완벽 발행 성공!")
     except Exception as e:
-        print(f"❌ 에러: {e}")
+        print(f"❌ 발행 에러: {e}")
 
 if __name__ == "__main__":
     main()
