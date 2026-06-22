@@ -276,25 +276,24 @@ def main():
     target_keyword = get_unique_target_keyword(blogger, BLOG_ID)
     ai_raw = generate_blog_content(target_keyword)
     
-    # [청소하기]: AI가 출력한 불필요한 메타 태그와 괄호 문구들을 여기서 싹 지웁니다.
-    tags_to_remove = [r'\[최종 결과물\]', r'\[SUB_TITLE_GLOBAL_IMPACT\]', r'\[BODY_GLOBAL_IMPACT\]', r'\*\*']
-    for tag in tags_to_remove:
-        ai_raw = re.sub(tag, '', ai_raw, flags=re.IGNORECASE)
-    
-    # [데이터 추출]
-    title = re.sub(r'<[^>]*>', '', re_extract_line('TITLE', ai_raw, "투자 정보")).strip()
-    tags = list(set([t.strip() for t in re_extract_line('TAGS', ai_raw, "주식투자").split(',')]))
-    sub1, sub2, sub3 = re_extract_line('SUB_TITLE_1', ai_raw), re_extract_line('SUB_TITLE_2', ai_raw), re_extract_line('SUB_TITLE_3', ai_raw)
-    
+    # [데이터 추출 함수]
     def extract_block(text, start, end=None):
         idx = text.find(start)
         if idx == -1: return ""
         idx += len(start)
         return text[idx:text.find(end) if end else None].strip()
 
+    # 1. 태그를 정식으로 추출 (여기에 있어야 괄호 태그가 노출 안 됩니다)
+    sub_global = extract_block(ai_raw, '[SUB_TITLE_GLOBAL_IMPACT]:', '[BODY_GLOBAL_IMPACT]')
+    body_global = extract_block(ai_raw, '[BODY_GLOBAL_IMPACT]:', '[SUB_TITLE_1]')
+    
+    # 2. 나머지도 추출
+    title = re.sub(r'<[^>]*>', '', re_extract_line('TITLE', ai_raw, "투자 정보")).strip()
+    tags = list(set([t.strip() for t in re_extract_line('TAGS', ai_raw, "주식투자").split(',')]))
+    sub1, sub2, sub3 = re_extract_line('SUB_TITLE_1', ai_raw), re_extract_line('SUB_TITLE_2', ai_raw), re_extract_line('SUB_TITLE_3', ai_raw)
     body1 = extract_block(ai_raw, '[BODY_1]:', '[SUB_TITLE_2]')
     body2 = extract_block(ai_raw, '[BODY_2]:', '[SUB_TITLE_3]')
-    body3 = extract_block(ai_raw, '[BODY_3]:')
+    body3 = extract_block(ai_raw, '[BODY_3]:', '[자기 검증 루프]')
     
     # [이미지 치환 및 HTML 변환]
     def get_image_tag():
@@ -303,38 +302,11 @@ def main():
     def replace_image_tags(text):
         return text.replace('[IMAGE]', get_image_tag())
     
-    def format_paragraphs(text):
-        processed_chunks = []
-        in_table = False
-        table_html = []
-        for line in text.split('\n'):
-            line = line.strip()
-            if not line: continue
-            if line.startswith('|') and line.endswith('|'):
-                if not in_table:
-                    in_table = True
-                    table_html = ['<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1;">']
-                if not re.match(r'^\|(?:[\s\-:]+\|)+$', line):
-                    table_html.append('<tr>' + ''.join([f'<td style="border:1px solid #cbd5e1; padding:10px;">{c.strip()}</td>' for c in line.split('|')[1:-1]]) + '</tr>')
-            else:
-                if in_table:
-                    in_table = False
-                    table_html.append('</table></div>')
-                    processed_chunks.append("".join(table_html))
-                    table_html = []
-                processed_chunks.append(f'<p style="margin-bottom:20px;">{line}</p>')
-        if in_table:
-            table_html.append('</table></div>')
-            processed_chunks.append("".join(table_html))
-        return "".join(processed_chunks)
-
+    # [HTML 구성]
     global_summary = re_extract_line('GLOBAL_SUMMARY', ai_raw, "")
-    gs_html = format_paragraphs(global_summary) if global_summary else ""
-    summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>' if gs_html else ""
+    summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px;"><strong>{sub_global}</strong><p>{format_paragraphs(body_global)}</p></div>' if sub_global else ""
     
-    # [최종 HTML 생성]
-    final_html = get_image_tag() + \
-                 summary_box + ADSENSE_CODE + \
+    final_html = get_image_tag() + summary_box + ADSENSE_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(replace_image_tags(body1))}' + \
                  CALCULATOR_BOARD_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(replace_image_tags(body2))}' + \
