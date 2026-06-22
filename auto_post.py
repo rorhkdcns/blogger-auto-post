@@ -291,41 +291,42 @@ def main():
     target_keyword = get_unique_target_keyword(blogger, BLOG_ID)
     ai_raw = generate_blog_content(target_keyword)
     
-    # [데이터 추출 함수]
-    def extract_block(text, start, end=None):
-        idx = text.find(start)
-        if idx == -1: return ""
-        idx += len(start)
-        return text[idx:text.find(end) if end else None].strip()
+    # [핵심 수정] 태그 이름과 상관없이 내용을 안전하게 뽑아내는 함수
+    def extract_flexible(text, start_tag):
+        # 태그를 대괄호 포함해서 찾고, 다음 태그가 나오기 전까지의 내용을 전부 가져옵니다.
+        pattern = rf"{re.escape(start_tag)}[:\s]*(.*?)(?=\[SUB_TITLE|\[BODY_1|\[BODY_2|\[BODY_3|\[GLOBAL_SUMMARY|$)"
+        match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+        return match.group(1).strip() if match else ""
 
-    # 1. 태그를 정식으로 추출 (여기에 있어야 괄호 태그가 노출 안 됩니다)
-    sub_global = extract_block(ai_raw, '[SUB_TITLE_GLOBAL_IMPACT]:', '[BODY_GLOBAL_IMPACT]')
-    body_global = extract_block(ai_raw, '[BODY_GLOBAL_IMPACT]:', '[SUB_TITLE_1]')
-    
-    # 2. 나머지도 추출
+    # [데이터 추출]
     title = re.sub(r'<[^>]*>', '', re_extract_line('TITLE', ai_raw, "투자 정보")).strip()
     tags = list(set([t.strip() for t in re_extract_line('TAGS', ai_raw, "주식투자").split(',')]))
-    sub1, sub2, sub3 = re_extract_line('SUB_TITLE_1', ai_raw), re_extract_line('SUB_TITLE_2', ai_raw), re_extract_line('SUB_TITLE_3', ai_raw)
-    body1 = extract_block(ai_raw, '[BODY_1]:', '[SUB_TITLE_2]')
-    body2 = extract_block(ai_raw, '[BODY_2]:', '[SUB_TITLE_3]')
-    body3 = extract_block(ai_raw, '[BODY_3]:', '[자기 검증 루프]')
     
-    # [이미지 치환 및 HTML 변환]
+    sub1, sub2, sub3 = re_extract_line('SUB_TITLE_1', ai_raw), re_extract_line('SUB_TITLE_2', ai_raw), re_extract_line('SUB_TITLE_3', ai_raw)
+    body1 = extract_flexible(ai_raw, '[BODY_1]')
+    body2 = extract_flexible(ai_raw, '[BODY_2]')
+    body3 = extract_flexible(ai_raw, '[BODY_3]')
+    
+    # [이미지 및 HTML 처리]
     def get_image_tag():
         return f'<div style="text-align:center; margin:20px 0;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>'
 
     def replace_image_tags(text):
         return text.replace('[IMAGE]', get_image_tag())
     
-    # [HTML 구성]
     global_summary = re_extract_line('GLOBAL_SUMMARY', ai_raw, "")
-    summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px;"><strong>{sub_global}</strong><p>{format_paragraphs(body_global)}</p></div>' if sub_global else ""
+    gs_html = format_paragraphs(global_summary) if global_summary else ""
+    summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px;">{gs_html}</div>' if gs_html else ""
     
     final_html = get_image_tag() + summary_box + ADSENSE_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(replace_image_tags(body1))}' + \
                  CALCULATOR_BOARD_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(replace_image_tags(body2))}' + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(replace_image_tags(body3))}' + ADSENSE_CODE + CTA_CODE
+
+    # [마지막으로 본문에 남아있을지 모르는 태그 찌꺼기 제거]
+    final_html = re.sub(r'\[SUB_TITLE_\d+\]:.*', '', final_html)
+    final_html = re.sub(r'\[BODY_\d+\]:', '', final_html)
 
     try:
         blogger.posts().insert(blogId=BLOG_ID, body={'title': title, 'content': final_html, 'labels': tags, 'published': calculate_scheduled_time()}, isDraft=False).execute()
