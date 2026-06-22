@@ -319,13 +319,28 @@ def main():
     gs_html = format_paragraphs(global_summary) if global_summary else ""
     summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>' if gs_html else ""
     
+  
+    
+    # main() 함수 내부, final_html 선언 직전에 이 두 함수를 먼저 넣어주세요
+    def get_image_tag():
+        return f'<div style="text-align:center; margin:20px 0;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>'
+
+    def replace_image_tags(text):
+        return text.replace('[IMAGE]', get_image_tag())
+
+  # AI 응답에서 불필요한 메타 태그 찌꺼기를 원천 제거합니다
+    ai_raw = ai_raw.replace('[최종 결과물]', '').replace('**', '')
+    
+    # 그리고 기존 final_html 부분을 이것으로 교체하세요
     final_html = f'<div style="text-align:center; margin-bottom:25px;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>' + \
                  summary_box + ADSENSE_CODE + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(body1)}' + \
+                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(replace_image_tags(body1))}' + \
                  CALCULATOR_BOARD_CODE + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(body2)}' + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(body3)}' + ADSENSE_CODE + CTA_CODE
+                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(replace_image_tags(body2))}' + \
+                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(replace_image_tags(body3))}' + ADSENSE_CODE + CTA_CODE
 
+
+                 
     try:
         blogger.posts().insert(blogId=BLOG_ID, body={'title': title, 'content': final_html, 'labels': tags, 'published': calculate_scheduled_time()}, isDraft=False).execute()
         print("✅ 발행 완료")
