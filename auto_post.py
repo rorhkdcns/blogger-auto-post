@@ -276,6 +276,12 @@ def main():
     target_keyword = get_unique_target_keyword(blogger, BLOG_ID)
     ai_raw = generate_blog_content(target_keyword)
     
+    # [청소하기]: AI가 출력한 불필요한 메타 태그와 괄호 문구들을 여기서 싹 지웁니다.
+    tags_to_remove = [r'\[최종 결과물\]', r'\[SUB_TITLE_GLOBAL_IMPACT\]', r'\[BODY_GLOBAL_IMPACT\]', r'\*\*']
+    for tag in tags_to_remove:
+        ai_raw = re.sub(tag, '', ai_raw, flags=re.IGNORECASE)
+    
+    # [데이터 추출]
     title = re.sub(r'<[^>]*>', '', re_extract_line('TITLE', ai_raw, "투자 정보")).strip()
     tags = list(set([t.strip() for t in re_extract_line('TAGS', ai_raw, "주식투자").split(',')]))
     sub1, sub2, sub3 = re_extract_line('SUB_TITLE_1', ai_raw), re_extract_line('SUB_TITLE_2', ai_raw), re_extract_line('SUB_TITLE_3', ai_raw)
@@ -289,6 +295,13 @@ def main():
     body1 = extract_block(ai_raw, '[BODY_1]:', '[SUB_TITLE_2]')
     body2 = extract_block(ai_raw, '[BODY_2]:', '[SUB_TITLE_3]')
     body3 = extract_block(ai_raw, '[BODY_3]:')
+    
+    # [이미지 치환 및 HTML 변환]
+    def get_image_tag():
+        return f'<div style="text-align:center; margin:20px 0;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>'
+
+    def replace_image_tags(text):
+        return text.replace('[IMAGE]', get_image_tag())
     
     def format_paragraphs(text):
         processed_chunks = []
@@ -319,33 +332,20 @@ def main():
     gs_html = format_paragraphs(global_summary) if global_summary else ""
     summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>' if gs_html else ""
     
-  
-    
-    # main() 함수 내부, final_html 선언 직전에 이 두 함수를 먼저 넣어주세요
-    def get_image_tag():
-        return f'<div style="text-align:center; margin:20px 0;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>'
-
-    def replace_image_tags(text):
-        return text.replace('[IMAGE]', get_image_tag())
-
-  # AI 응답에서 불필요한 메타 태그 찌꺼기를 원천 제거합니다
-    ai_raw = ai_raw.replace('[최종 결과물]', '').replace('**', '')
-    
-    # 그리고 기존 final_html 부분을 이것으로 교체하세요
-    final_html = f'<div style="text-align:center; margin-bottom:25px;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>' + \
+    # [최종 HTML 생성]
+    final_html = get_image_tag() + \
                  summary_box + ADSENSE_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(replace_image_tags(body1))}' + \
                  CALCULATOR_BOARD_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(replace_image_tags(body2))}' + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(replace_image_tags(body3))}' + ADSENSE_CODE + CTA_CODE
 
-
-                 
     try:
         blogger.posts().insert(blogId=BLOG_ID, body={'title': title, 'content': final_html, 'labels': tags, 'published': calculate_scheduled_time()}, isDraft=False).execute()
         print("✅ 발행 완료")
     except Exception as e:
         print(f"❌ 에러: {e}")
 
+        
 if __name__ == "__main__":
     main()
