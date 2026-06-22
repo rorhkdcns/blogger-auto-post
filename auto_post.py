@@ -1,14 +1,14 @@
-import os
-import sys
-import subprocess
-import time
-import re
-import random
-import pickle
 import base64
 import datetime
-import urllib.parse
 import html
+import os
+import pickle
+import random
+import re
+import subprocess
+import sys
+import time
+import urllib.parse
 
 # [1단계] 라이브러리 자동 설치 및 검증
 required_modules = [
@@ -96,51 +96,6 @@ URL_손절익절 = "https://invest.gwangchoon.com/2026/05/blog-post_281.html"
 URL_복리 = "https://invest.gwangchoon.com/2026/05/10-1.html"
 URL_환율 = "https://invest.gwangchoon.com/2026/05/blog-post_989.html"
 
-# 보조 함수: 상단으로 이동
-def re_extract_line(tag, text, default=""):
-    pattern = r'\[?' + re.escape(tag) + r'\]?\s*:\s*(.*)'
-    for line in text.split('\n'):
-        if tag in line:
-            match = re.search(pattern, line, re.IGNORECASE)
-            if match:
-                return match.group(1).strip()
-    return default
-
-def get_unique_target_keyword(blogger, blog_id):
-    recent_titles = []
-    try:
-        posts = blogger.posts().list(blogId=blog_id, maxResults=30).execute()
-        for item in posts.get('items', []):
-            clean_title = re.sub(r'\s+', '', item.get('title', ''))
-            recent_titles.append(clean_title)
-    except:
-        pass
-    shuffled_keywords = STOCK_INFO_KEYWORDS.copy()
-    random.shuffle(shuffled_keywords)
-    for keyword in shuffled_keywords:
-        short_keyword = keyword.split(" ")[0]
-        if not any(re.sub(r'\s+', '', short_keyword) in r_title for r_title in recent_titles):
-            return keyword
-    return random.choice(STOCK_INFO_KEYWORDS)
-
-def calculate_scheduled_time():
-    kst = datetime.timezone(datetime.timedelta(hours=9))
-    # 현재 시간보다 5분 미래로 강제 설정하여 API가 '과거'라고 판단하지 않게 함
-    now = datetime.datetime.now(kst) + datetime.timedelta(minutes=5) 
-    today = now.date()
-    
-    # 9시, 11시, 13시, 15시, 17시, 19시, 21시 중 가장 가까운 미래 찾기
-    candidates = [datetime.datetime.combine(today, datetime.time(h, random.randint(1, 15)), tzinfo=kst) for h in [9, 11, 13, 15, 17, 19, 21]]
-    
-    # 지금보다 최소 5분 뒤의 시간 중 가장 빠른 시간 선택
-    scheduled_time = next((c for c in candidates if c > now), None)
-    
-    if not scheduled_time:
-        # 오늘 다 지났으면 내일 9시로 예약
-        scheduled_time = datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time(9, random.randint(1, 15)), tzinfo=kst)
-        
-    return scheduled_time.strftime('%Y-%m-%dT%H:%M:%S+09:00')
-
 ADSENSE_CODE = """
 <div class="adsense-container" style="text-align:center; margin: 30px 0;">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={CLIENT}" crossorigin="anonymous"></script>
@@ -180,43 +135,109 @@ CALCULATOR_BOARD_CODE = f"""
 </div>
 """
 
+# =====================================================================
+# 🛠️ 모든 전역 보조 함수들 (여기에 format_paragraphs 배치 완료)
+# =====================================================================
+def re_extract_line(tag, text, default=""):
+    pattern = r'\[?' + re.escape(tag) + r'\]?\s*:\s*(.*)'
+    for line in text.split('\n'):
+        if tag in line:
+            match = re.search(pattern, line, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+    return default
+
+def extract_flexible(text, start_tag):
+    pattern = rf"{re.escape(start_tag)}[:\s]*(.*?)(?=\[SUB_TITLE|\[BODY_1|\[BODY_2|\[BODY_3|\[GLOBAL_SUMMARY|\[자기 검증|$)"
+    match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+    return match.group(1).strip() if match else ""
+
+def get_image_tag():
+    return f'<div style="text-align:center; margin:20px 0;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>'
+
+def replace_image_tags(text):
+    return text.replace('[IMAGE]', get_image_tag())
+
+# [에러의 원인이었던 함수를 안전한 최상단에 고정 배치했습니다]
+def format_paragraphs(text):
+    processed_chunks = []
+    in_table = False
+    table_html = []
+    for line in text.split('\n'):
+        line = line.strip()
+        if not line: continue
+        if line.startswith('|') and line.endswith('|'):
+            if not in_table:
+                in_table = True
+                table_html = ['<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1;">']
+            if not re.match(r'^\|(?:[\s\-:]+\|)+$', line):
+                tds = ''.join([f'<td style="border:1px solid #cbd5e1; padding:10px;">{c.strip()}</td>' for c in line.split('|')[1:-1]])
+                table_html.append(f'<tr>{tds}</tr>')
+        else:
+            if in_table:
+                in_table = False
+                table_html.append('</table></div>')
+                processed_chunks.append("".join(table_html))
+                table_html = []
+            processed_chunks.append(f'<p style="margin-bottom:20px;">{line}</p>')
+    if in_table:
+        table_html.append('</table></div>')
+        processed_chunks.append("".join(table_html))
+    return "".join(processed_chunks)
+
+def get_unique_target_keyword(blogger, blog_id):
+    recent_titles = []
+    try:
+        posts = blogger.posts().list(blogId=blog_id, maxResults=30).execute()
+        for item in posts.get('items', []):
+            clean_title = re.sub(r'\s+', '', item.get('title', ''))
+            recent_titles.append(clean_title)
+    except: pass
+    shuffled_keywords = STOCK_INFO_KEYWORDS.copy()
+    random.shuffle(shuffled_keywords)
+    for keyword in shuffled_keywords:
+        short_keyword = keyword.split(" ")[0]
+        if not any(re.sub(r'\s+', '', short_keyword) in r_title for r_title in recent_titles):
+            return keyword
+    return random.choice(STOCK_INFO_KEYWORDS)
+
+def calculate_scheduled_time():
+    kst = datetime.timezone(datetime.timedelta(hours=9))
+    now = datetime.datetime.now(kst) + datetime.timedelta(minutes=5) 
+    today = now.date()
+    candidates = [datetime.datetime.combine(today, datetime.time(h, random.randint(1, 15)), tzinfo=kst) for h in [9, 11, 13, 15, 17, 19, 21]]
+    scheduled_time = next((c for c in candidates if c > now), None)
+    if not scheduled_time:
+        scheduled_time = datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time(9, random.randint(1, 15)), tzinfo=kst)
+    return scheduled_time.strftime('%Y-%m-%dT%H:%M:%S+09:00')
+
 def generate_blog_content(target_keyword):
     api_key_direct = os.environ.get("API_KEY")
     client = genai.Client(api_key=api_key_direct, http_options=types.HttpOptions(api_version="v1"))
     prompt = (
         "너는 10년 차 전업 투자자이자 전문 금융 칼럼니스트야. "
         f"[{target_keyword}]를 검색한 사용자의 의도를 완벽히 해결하는 '실전 가이드'를 작성해줘.\n\n"
-        
         "[필수 작성 지침]\n"
         "1. [제목 법칙]: 핵심 키워드와 함께 유저가 '내 궁금증이 바로 해결되겠구나'라고 느낄 수 있는 구체적인 가치를 담아라.\n\n"
-        
         "2. [이미지 배치 법칙 - 매우 중요]:\n"
         "   - [SUB_TITLE_1], [SUB_TITLE_2], [SUB_TITLE_3] 바로 위에는 반드시 '[IMAGE]'라는 문구를 넣어라.\n"
         "   - 글 중간에 시각적 환기점이 있어야 이탈률이 낮아지므로, 소제목 직전마다 반드시 이미지 공간을 확보할 것.\n\n"
-        
         "3. [극강의 모바일 가독성 - 절대 준수]:\n"
         "   - 문장 길이를 극도로 짧게 유지하라. 1문장은 20자 내외로 끊어라.\n"
         "   - 문단은 절대 2문장을 넘기지 마라. (엔터키를 과감하게 활용할 것)\n"
         "   - '또한', '반면에', '결론적으로' 등 불필요한 접속사를 80% 이상 삭제하라.\n"
         "   - 정보 나열은 반드시 리스트(-, 1. 2.)를 사용하고, 비교 분석은 표(Table)로 반드시 구현하라.\n\n"
-        
         "4. [스크롤 방지 장치]:\n"
         "   - [BODY_1] 첫 문장에 사용자의 고민에 대한 즉각적인 공감과 해답을 제시하라.\n"
         "   - 핵심 문장과 중요 수치는 반드시 **볼드체**와 <b><font color=\"#e11d48\">중요데이터</font></b> 양식을 적용해 시선을 뺏어라.\n\n"
-        
         "5. [금지어]: '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략' 절대 금지.\n\n"
-        
         "6. [구조 설계]:\n"
         "   - [BODY_1]: 독자의 고민 공감 + 바로 확인 가능한 핵심 결론 (두괄식).\n"
         "   - [BODY_2]: [초보자의 실수] vs [현명한 대응]을 2열 표로 대조하여 가독성 극대화.\n"
         "   - [BODY_3]: 지금 당장 실천할 수 있는 객관적인 3가지 액션 가이드.\n\n"
-        
         "7. [시각화 및 태그]: IMAGE_PROMPT는 직관적인 명사 2-3개. 태그는 실제 검색량이 많은 구체적 키워드 3개.\n\n"
-        
         "8. [초보자 눈높이]: 전문 용어 사용 시 반드시 괄호를 열고 5자 이내의 쉬운 비유를 덧붙일 것.\n\n"
-        
         "9. [글로벌 독자 대응]: 블로그 최상단에 'Global Summary'를 영어로 3문장 작성하고, 소제목 'Global Market Impact' 추가.\n\n"
-        
         "[출력 포맷 고정]\n"
         "[TITLE]: (제목)\n"
         "[GLOBAL_SUMMARY]: (영문 요약)\n"
@@ -228,13 +249,11 @@ def generate_blog_content(target_keyword):
         "[BODY_2]: (표 삽입 필수)\n"
         "[IMAGE]\n[SUB_TITLE_3]: (액션 플랜형 소제목)\n"
         "[BODY_3]: (실천 가이드)\n\n"
-        
         "[자기 검증 루프]:\n"
         "1. 위 지침을 100% 준수했는지 스스로 체크하라.\n"
         "2. 소제목 바로 위에 [IMAGE] 태그가 모두 포함되었는지 확인하라.\n"
         "3. 모든 수정이 완료되면 [최종 결과물] 태그와 함께 출력하라."
     )
-    # 이하 동일
     
     for model in ['gemini-2.5-flash', 'gemini-2.5-pro']:
         for attempt in range(3):
@@ -258,9 +277,9 @@ def check_already_posted(blogger, blog_id):
     except: pass
     return False
 
-
-
-
+# =====================================================================
+# 🚀 메인 실행 함수
+# =====================================================================
 def main():
     kst = datetime.timezone(datetime.timedelta(hours=9))
     b64_token = os.environ.get("TOKEN_PICKLE_BASE64")
@@ -279,49 +298,45 @@ def main():
     target_keyword = get_unique_target_keyword(blogger, BLOG_ID)
     ai_raw = generate_blog_content(target_keyword)
     
-    # [핵심 수정] 태그 이름과 상관없이 내용을 안전하게 뽑아내는 함수
-    def extract_flexible(text, start_tag):
-        # 태그를 대괄호 포함해서 찾고, 다음 태그가 나오기 전까지의 내용을 전부 가져옵니다.
-        pattern = rf"{re.escape(start_tag)}[:\s]*(.*?)(?=\[SUB_TITLE|\[BODY_1|\[BODY_2|\[BODY_3|\[GLOBAL_SUMMARY|$)"
-        match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
-        return match.group(1).strip() if match else ""
-
-    # [데이터 추출]
+    # [1. 찌꺼기 문자열 사전 청소]
+    ai_raw = ai_raw.replace('[최종 결과물]', '').replace('**', '').replace('```html', '').replace('```', '')
+    
+    # [2. 안전한 데이터 추출]
     title = re.sub(r'<[^>]*>', '', re_extract_line('TITLE', ai_raw, "투자 정보")).strip()
     tags = list(set([t.strip() for t in re_extract_line('TAGS', ai_raw, "주식투자").split(',')]))
     
-    sub1, sub2, sub3 = re_extract_line('SUB_TITLE_1', ai_raw), re_extract_line('SUB_TITLE_2', ai_raw), re_extract_line('SUB_TITLE_3', ai_raw)
-    body1 = extract_flexible(ai_raw, '[BODY_1]')
-    body2 = extract_flexible(ai_raw, '[BODY_2]')
-    body3 = extract_flexible(ai_raw, '[BODY_3]')
+    sub1 = extract_flexible(ai_raw, "[SUB_TITLE_1]")
+    sub2 = extract_flexible(ai_raw, "[SUB_TITLE_2]")
+    sub3 = extract_flexible(ai_raw, "[SUB_TITLE_3]")
     
-    # [이미지 및 HTML 처리]
-    def get_image_tag():
-        return f'<div style="text-align:center; margin:20px 0;"><img src="{GITHUB_IMAGE_BASE_URL}{random.choice(github_images_pool)}" style="max-width:100%; border-radius:8px;"/></div>'
+    body1 = extract_flexible(ai_raw, "[BODY_1]")
+    body2 = extract_flexible(ai_raw, "[BODY_2]")
+    body3 = extract_flexible(ai_raw, "[BODY_3]")
 
-    def replace_image_tags(text):
-        return text.replace('[IMAGE]', get_image_tag())
-    
+    # AI가 본문을 안 썼으면 강제 에러를 뿜어서 깃헙 액션이 다시 일하게 만듭니다.
+    if not body1 or not body2:
+        raise ValueError(f"🚨 본문 파싱 실패! AI가 글을 제대로 작성하지 않았습니다.\n[AI출력원본]:\n{ai_raw[:400]}")
+
     global_summary = re_extract_line('GLOBAL_SUMMARY', ai_raw, "")
     gs_html = format_paragraphs(global_summary) if global_summary else ""
-    summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px;">{gs_html}</div>' if gs_html else ""
+    summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>' if gs_html else ""
     
+    # [3. 최종 HTML 조립]
     final_html = get_image_tag() + summary_box + ADSENSE_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(replace_image_tags(body1))}' + \
                  CALCULATOR_BOARD_CODE + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(replace_image_tags(body2))}' + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(replace_image_tags(body3))}' + ADSENSE_CODE + CTA_CODE
 
-    # [마지막으로 본문에 남아있을지 모르는 태그 찌꺼기 제거]
-    final_html = re.sub(r'\[SUB_TITLE_\d+\]:.*', '', final_html)
-    final_html = re.sub(r'\[BODY_\d+\]:', '', final_html)
+    # 혹시라도 HTML에 남아있을지 모르는 [SUB_TITLE_X] 괄호 찌꺼기 최종 삭제
+    final_html = re.sub(r'\[SUB_TITLE_\d+\]:?', '', final_html)
+    final_html = re.sub(r'\[BODY_\d+\]:?', '', final_html)
 
     try:
         blogger.posts().insert(blogId=BLOG_ID, body={'title': title, 'content': final_html, 'labels': tags, 'published': calculate_scheduled_time()}, isDraft=False).execute()
-        print("✅ 발행 완료")
+        print("✅ 포스팅 완벽 발행 완료!")
     except Exception as e:
         print(f"❌ 에러: {e}")
 
-        
 if __name__ == "__main__":
     main()
