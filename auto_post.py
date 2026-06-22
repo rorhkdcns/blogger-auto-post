@@ -197,7 +197,7 @@ def calculate_scheduled_time():
 
 def generate_blog_content(target_keyword):
     api_key_direct = os.environ.get("API_KEY")
-    client = genai.Client(api_key=api_key_direct, http_options=types.HttpOptions(api_version="v1"))
+    client = genai.Client(api_key=api_key_direct, http_options=types.HttpOptions(api_version="v1beta"))
     
     # AI에게 정규식 괄호 마커가 아닌, 완벽한 JSON 오브젝트 생성을 명령합니다.
     prompt = (
