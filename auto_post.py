@@ -148,6 +148,10 @@ def get_image_tag():
 
 def format_paragraphs(text):
     if not text or not text.strip(): return ""
+    
+    # 마크다운 볼드체(**)를 HTML 강조 태그로 안전 변환
+    text = re.sub(r'\*\*(.*?)\*\*', r'<strong style="color:#2563eb;">\1</strong>', text)
+    
     processed_chunks = []
     in_table = False
     table_html = []
@@ -157,9 +161,9 @@ def format_paragraphs(text):
         if line.startswith('|') and line.endswith('|'):
             if not in_table:
                 in_table = True
-                table_html = ['<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1;">']
+                table_html = ['<div style="overflow-x:auto; margin: 20px 0;"><table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1;">']
             if not re.match(r'^\|(?:[\s\-:]+\|)+$', line):
-                tds = ''.join([f'<td style="border:1px solid #cbd5e1; padding:10px;">{c.strip()}</td>' for c in line.split('|')[1:-1]])
+                tds = ''.join([f'<td style="border:1px solid #cbd5e1; padding:10px; font-size:14px;">{c.strip()}</td>' for c in line.split('|')[1:-1]])
                 table_html.append(f'<tr>{tds}</tr>')
         else:
             if in_table:
@@ -167,7 +171,7 @@ def format_paragraphs(text):
                 table_html.append('</table></div>')
                 processed_chunks.append("".join(table_html))
                 table_html = []
-            processed_chunks.append(f'<p style="margin-bottom:20px; line-height:1.7;">{line}</p>')
+            processed_chunks.append(f'<p style="margin-bottom:20px; line-height:1.7; font-size:15px; color:#334155;">{line}</p>')
     if in_table:
         table_html.append('</table></div>')
         processed_chunks.append("".join(table_html))
@@ -203,28 +207,29 @@ def generate_blog_content(target_keyword):
     api_key_direct = os.environ.get("API_KEY")
     client = genai.Client(api_key=api_key_direct, http_options=types.HttpOptions(api_version="v1beta"))
     
+    # [핵심 개편] 본문 분량 2배 강화 지침 및 한글 요약본으로 수정
     prompt = (
-        "너는 10년 차 전업 투자자이자 전문 금융 칼럼니스트야. "
-        f"[{target_keyword}]를 검색한 사용자의 의도를 완벽히 해결하는 '실전 가이드'를 작성해줘.\n\n"
+        "너는 10년 차 전업 투자자이자 구독자 10만 명의 경제 전문 블로거야. "
+        f"[{target_keyword}]에 대해 검색한 사용자가 체류 시간을 길게 유지할 수 있도록 '고밀도 정보성 칼럼'을 작성해줘.\n\n"
         "[필수 작성 지침]\n"
-        "1. [제목]: 핵심 키워드와 함께 유저가 '내 궁금증이 바로 해결되겠구나'라고 느낄 수 있는 구체적인 가치를 담아라.\n"
-        "2. [모바일 가독성]: 문장은 20자 내외로 짧게 끊고, 불필요한 접속사(또한, 반면에 등)는 80% 이상 삭제하라. 정보 나열은 글머리기호(-, 1. 2.)를 쓰고 비교 분석은 마크다운 표(|제목|내용|)로 구현하라.\n"
-        "3. [스크롤 방지]: 1단계 본문 첫 문장에 사용자의 고민에 대한 즉각적인 공감과 해답을 제시하라. 핵심 문장에는 **볼드체**를 적용하라.\n"
-        "4. [금지어]: '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략' 절대 금지.\n"
-        "5. [초보자 눈높이]: 전문 용어 사용 시 반드시 괄호를 열고 쉬운 뜻풀이나 비유를 덧붙일 것.\n"
-        "6. https://toollab.kr/ko/%EC%8A%AC%EB%9F%AC%EA%B7%B8-%EC%83%9D%EC%84%B1%EA%B8%B0/: 이 글의 웹 주소(URL)로 쓸 금융/주식 관련 소문자 영어 단어 2~3개를 하이픈(-)으로 연결하여 'slug' 값에 작성하라. (예: 'stock-beginner-guide')\n\n"
+        "1. [제목]: 핵심 키워드가 맨 앞에 오도록 배치하고 클릭률을 높이는 구체적인 이득을 명시하라. (예: '주식 예수금 뜻과 출금 가능 시간 완벽 정리')\n"
+        "2. [분량 및 깊이 강화]: 블로그 상위 노출을 위해 각 소제목 본문(body_1, body_2, body_3)은 각각 최소 450자~600자 이상으로 매우 길고 상세하게 작성하라. 원리 설명뿐만 아니라 '실제 투자 상황에서의 예시'를 반드시 포함하라.\n"
+        "3. [모바일 가독성]: 문장은 25자 내외로 호흡을 짧게 끊고 접속사는 삭제하라. 정보 나열은 글머리기호(-, 1. 2.)를 쓰고 비교 분석은 마크다운 표(|제목|내용|)로 구현하라.\n"
+        "4. [한글 핵심 요약]: global_summary 항목에는 영어 대신 '바쁜 현대인을 위한 핵심 요약 3줄'을 한글로 작성하라.\n"
+        "5. [금지어]: '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략' 절대 금지.\n"
+        "6. [URL 슬러그 생성]: 이 글의 웹 주소(URL)로 쓸 금융/주식 관련 소문자 영어 단어 2~3개를 하이픈(-)으로 연결하여 'slug' 값에 작성하라. (예: 'stock-beginner-guide')\n\n"
         "반드시 아래의 JSON 규격에 맞춰서 작성하고, JSON 데이터 외에 다른 설명 텍스트나 마크다운 문법은 일절 출력하지 마라.\n"
         "{\n"
-        '  "title": "신뢰감 있는 정보성 제목",\n'
+        '  "title": "한글 SEO 최적화 제목",\n'
         '  "slug": "stock-beginner-guide",\n'
-        '  "global_summary": "글로벌 투자자를 위한 영문 3문장 요약",\n'
+        '  "global_summary": "한글 핵심 요약 3줄 내용",\n'
         '  "tags": ["주식투자", "재테크", "관련키워드"],\n'
-        '  "sub_title_1": "1단계 소제목 (개념과 원인)",\n'
-        '  "body_1": "1단계 본문 내용 (공감 및 핵심 답변 우선 배치)",\n'
-        '  "sub_title_2": "2단계 소제목 (실전 위협과 분석)",\n'
-        '  "body_2": "2단계 본문 내용 (비교 분석용 마크다운 표 반드시 삽입)",\n'
-        '  "sub_title_3": "3단계 소제목 (대응 가이드)",\n'
-        '  "body_3": "3단계 본문 내용 (객관적 실천 방향 제안)"\n'
+        '  "sub_title_1": "1단계 소제목 (개념 완벽 이해하기)",\n'
+        '  "body_1": "1단계 본문 내용 (최소 450자 이상 길고 상세하게 작성)",\n'
+        '  "sub_title_2": "2단계 소제목 (실전 투자에서의 주의점 분석)",\n'
+        '  "body_2": "2단계 본문 내용 (비교 분석용 마크다운 표 반드시 삽입 및 상세 설명)",\n'
+        '  "sub_title_3": "3단계 소제목 (전업 투자자의 실천 팁)",\n'
+        '  "body_3": "3단계 본문 내용 (구체적인 대응 매뉴얼 상세 제시)"\n'
         "}"
     )
     
@@ -236,7 +241,7 @@ def generate_blog_content(target_keyword):
     for model in ['gemini-2.5-flash', 'gemini-2.5-pro']:
         for attempt in range(3):
             try:
-                print(f"🤖 Gemini API 호출 중... (모델: {model}, 시도: {attempt+1}/3)")
+                print(f"🤖 Gemini API 고밀도 원고 생성 중... (모델: {model}, 시도: {attempt+1}/3)")
                 response = client.models.generate_content(model=model, contents=prompt, config=config)
                 if response and response.text:
                     return response.text
@@ -305,47 +310,53 @@ def main():
         raise ValueError(f"🚨 본문 실종 에러! 껍데기 파싱은 성공했으나 본문 내용이 비어있습니다.\n[body1]: {body1}\n[body2]: {body2}")
 
     gs_html = format_paragraphs(global_summary) if global_summary else ""
-    summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>' if gs_html else ""
+    
+    # [수정] 영문 표기 박스 -> 한글 '💡 핵심 요약' 박스로 변경
+    summary_box = f'<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:18px; margin:20px 0; border-radius:0 8px 8px 0;"><p style="margin:0 0 8px 0; font-size:14px; font-weight:bold; color:#1e40af;">💡 핵심 요약</p><div style="font-size:14px; color:#334155;">{gs_html}</div></div>' if gs_html else ""
     
     final_html = get_image_tag() + summary_box + ADSENSE_CODE + \
                  get_image_tag() + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(body1)}' + \
+                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub1}</h3>{format_paragraphs(body1)}' + \
                  CALCULATOR_BOARD_CODE + \
                  get_image_tag() + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub2}</h3>{format_paragraphs(body2)}' + \
+                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub2}</h3>{format_paragraphs(body2)}' + \
                  get_image_tag() + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(body3)}' + ADSENSE_CODE + CTA_CODE
+                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub3}</h3>{format_paragraphs(body3)}' + ADSENSE_CODE + CTA_CODE
 
     scheduled_pub_time = calculate_scheduled_time()
 
-    # [핵심 비틀기] 1단계에선 published를 빼서 즉시 라이브로 주소 굳히고, 2단계 패치 때 예약시간 주입!
+    # [핵심 개편: 3연타 분할 전송] 라이브 등록 -> 한글 제목 먼저 박제 -> 마지막에 미래 시간 유배
     try:
-        print(f"🔗 [1단계] 영어 퍼머링크 강제 획득 중... (Target URL: /{slug}.html)")
+        print(f"🔗 [1연타] 영어 퍼머링크 굳히기 발행 중... (Target URL: /{slug}.html)")
         res_insert = blogger.posts().insert(
             blogId=BLOG_ID, 
-            body={
-                'title': slug, 
-                'content': final_html, 
-                'labels': tags
-                # ★ 핵심: 여기에 published를 안 넣어야 즉시 라이브로 주소가 예쁘게 굳음!
-            }, 
+            body={'title': slug, 'content': final_html, 'labels': tags}, 
             isDraft=False
         ).execute()
         
         created_post_id = res_insert.get('id')
         
-        # 구글 DB 인덱싱 안전 대기
         time.sleep(1.5)
         
-        print(f"✍️ [2단계] 한글 제목 및 미래 예약시간({scheduled_pub_time}) 덮어쓰기 중...")
+        print(f"✍️ [2연타] 한글 정식 제목('{title}') 먼저 안전하게 박제 중...")
         blogger.posts().patch(
             blogId=BLOG_ID, 
             postId=created_post_id, 
             body={
                 'title': title,
-                'content': final_html, # 본문 증발 버그 방어
-                'labels': tags,
-                'published': scheduled_pub_time # ★ 여기에 예약 시간을 얹어 유배 보냄
+                'content': final_html, # 본문 삭제 버그 방어
+                'labels': tags
+            }
+        ).execute()
+
+        time.sleep(1.0)
+
+        print(f"⏰ [3연타] 예약 대기열({scheduled_pub_time})로 최종 유배 전송 중...")
+        blogger.posts().patch(
+            blogId=BLOG_ID, 
+            postId=created_post_id, 
+            body={
+                'published': scheduled_pub_time
             }
         ).execute()
 
