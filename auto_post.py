@@ -10,6 +10,10 @@ import subprocess
 import sys
 import time
 import urllib.parse
+import warnings
+
+# [추가] 보기 싫은 구글 API 파이썬 버전 경고문 강제 차단
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 # [1단계] 라이브러리 자동 설치 및 검증
 required_modules = [
@@ -199,7 +203,7 @@ def generate_blog_content(target_keyword):
     api_key_direct = os.environ.get("API_KEY")
     client = genai.Client(api_key=api_key_direct, http_options=types.HttpOptions(api_version="v1beta"))
     
-    # AI에게 정규식 괄호 마커가 아닌, 완벽한 JSON 오브젝트 생성을 명령합니다.
+    # [수정 로직] 슬러그 생성 지침 6번 추가 반영
     prompt = (
         "너는 10년 차 전업 투자자이자 전문 금융 칼럼니스트야. "
         f"[{target_keyword}]를 검색한 사용자의 의도를 완벽히 해결하는 '실전 가이드'를 작성해줘.\n\n"
@@ -208,10 +212,12 @@ def generate_blog_content(target_keyword):
         "2. [모바일 가독성]: 문장은 20자 내외로 짧게 끊고, 불필요한 접속사(또한, 반면에 등)는 80% 이상 삭제하라. 정보 나열은 글머리기호(-, 1. 2.)를 쓰고 비교 분석은 마크다운 표(|제목|내용|)로 구현하라.\n"
         "3. [스크롤 방지]: 1단계 본문 첫 문장에 사용자의 고민에 대한 즉각적인 공감과 해답을 제시하라. 핵심 문장에는 **볼드체**를 적용하라.\n"
         "4. [금지어]: '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략' 절대 금지.\n"
-        "5. [초보자 눈높이]: 전문 용어 사용 시 반드시 괄호를 열고 쉬운 뜻풀이나 비유를 덧붙일 것.\n\n"
+        "5. [초보자 눈높이]: 전문 용어 사용 시 반드시 괄호를 열고 쉬운 뜻풀이나 비유를 덧붙일 것.\n"
+        "6. https://toollab.kr/ko/%EC%8A%AC%EB%9F%AC%EA%B7%B8-%EC%83%9D%EC%84%B1%EA%B8%B0/: 이 글의 웹 주소(URL)로 쓸 금융/주식 관련 소문자 영어 단어 2~3개를 하이픈(-)으로 연결하여 'slug' 값에 작성하라. (예: 'stock-beginner-guide')\n\n"
         "반드시 아래의 JSON 규격에 맞춰서 작성하고, JSON 데이터 외에 다른 설명 텍스트나 마크다운 문법은 일절 출력하지 마라.\n"
         "{\n"
         '  "title": "신뢰감 있는 정보성 제목",\n'
+        '  "slug": "stock-beginner-guide",\n'
         '  "global_summary": "글로벌 투자자를 위한 영문 3문장 요약",\n'
         '  "tags": ["주식투자", "재테크", "관련키워드"],\n'
         '  "sub_title_1": "1단계 소제목 (개념과 원인)",\n'
@@ -223,7 +229,6 @@ def generate_blog_content(target_keyword):
         "}"
     )
     
-    # 구원투수 설정: AI의 출력 엔진 자체를 'JSON 모드'로 강제 잠금 처리합니다.
     config = types.GenerateContentConfig(
         response_mime_type="application/json",
         temperature=0.7
@@ -272,9 +277,7 @@ def main():
     target_keyword = get_unique_target_keyword(blogger, BLOG_ID)
     ai_json_response = generate_blog_content(target_keyword)
     
-    # [1. 완벽한 JSON 파싱]
     try:
-        # 혹시 AI가 ```json 껍데기를 씌워서 줬을 경우를 대비한 안전 탈곡기
         clean_json = ai_json_response.replace('```json', '').replace('```', '').strip()
         data = json.loads(clean_json)
     except Exception as e:
@@ -294,14 +297,18 @@ def main():
     
     global_summary = data.get("global_summary", "")
 
-    # [2. 철저한 알맹이 검증]
+    # [추가] AI가 생성한 슬러그 추출 및 특수문자 방어 로직
+    raw_slug = data.get("slug", "stock-investment-guide").lower()
+    slug = re.sub(r'[^a-z0-9\-]', '', raw_slug).strip('-')
+    if not slug:
+        slug = "finance-tip-guide"
+
     if len(body1) < 15 or len(body2) < 15:
         raise ValueError(f"🚨 본문 실종 에러! 껍데기 파싱은 성공했으나 본문 내용이 비어있습니다.\n[body1]: {body1}\n[body2]: {body2}")
 
     gs_html = format_paragraphs(global_summary) if global_summary else ""
     summary_box = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; margin-bottom:20px; font-size:14px; color:#475569;"><strong>Global Summary:</strong> {gs_html}</div>' if gs_html else ""
     
-    # [3. 소제목 바로 위마다 파이썬이 직접 강제 이미지 주입 (AI 의존 NO)]
     final_html = get_image_tag() + summary_box + ADSENSE_CODE + \
                  get_image_tag() + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub1}</h3>{format_paragraphs(body1)}' + \
@@ -311,8 +318,39 @@ def main():
                  get_image_tag() + \
                  f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px;">{sub3}</h3>{format_paragraphs(body3)}' + ADSENSE_CODE + CTA_CODE
 
+    scheduled_pub_time = calculate_scheduled_time()
+
+    # [수정 로직] 영어 슬러그 LIVE 선(先)발행 후 1.5초 뒤 한글 제목 덮어쓰기 (본문 증발 방어 포함)
     try:
-        blogger.posts().insert(blogId=BLOG_ID, body={'title': title, 'content': final_html, 'labels': tags, 'published': calculate_scheduled_time()}, isDraft=False).execute()
+        print(f"🔗 [1단계] 영어 퍼머링크 생성 중... (Target URL: /{slug}.html)")
+        res_insert = blogger.posts().insert(
+            blogId=BLOG_ID, 
+            body={
+                'title': slug, 
+                'content': final_html, 
+                'labels': tags, 
+                'published': scheduled_pub_time
+            }, 
+            isDraft=False
+        ).execute()
+        
+        created_post_id = res_insert.get('id')
+        
+        # 구글 서버 DB 인덱싱 안전 대기
+        time.sleep(1.5)
+        
+        print(f"✍️ [2단계] 한글 정식 제목으로 덮어쓰기 중... ('{title}')")
+        blogger.posts().patch(
+            blogId=BLOG_ID, 
+            postId=created_post_id, 
+            body={
+                'title': title,
+                'content': final_html, # 구글 서버의 본문 삭제 버그 강제 차단
+                'labels': tags,
+                'published': scheduled_pub_time
+            }
+        ).execute()
+
         print("✅ 포스팅 규격화 완벽 발행 성공!")
     except Exception as e:
         print(f"❌ 발행 에러: {e}")
