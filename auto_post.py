@@ -203,7 +203,6 @@ def generate_blog_content(target_keyword):
     api_key_direct = os.environ.get("API_KEY")
     client = genai.Client(api_key=api_key_direct, http_options=types.HttpOptions(api_version="v1beta"))
     
-    # [수정 로직] 슬러그 생성 지침 6번 추가 반영
     prompt = (
         "너는 10년 차 전업 투자자이자 전문 금융 칼럼니스트야. "
         f"[{target_keyword}]를 검색한 사용자의 의도를 완벽히 해결하는 '실전 가이드'를 작성해줘.\n\n"
@@ -297,7 +296,6 @@ def main():
     
     global_summary = data.get("global_summary", "")
 
-    # [추가] AI가 생성한 슬러그 추출 및 특수문자 방어 로직
     raw_slug = data.get("slug", "stock-investment-guide").lower()
     slug = re.sub(r'[^a-z0-9\-]', '', raw_slug).strip('-')
     if not slug:
@@ -320,34 +318,34 @@ def main():
 
     scheduled_pub_time = calculate_scheduled_time()
 
-    # [수정 로직] 영어 슬러그 LIVE 선(先)발행 후 1.5초 뒤 한글 제목 덮어쓰기 (본문 증발 방어 포함)
+    # [핵심 비틀기] 1단계에선 published를 빼서 즉시 라이브로 주소 굳히고, 2단계 패치 때 예약시간 주입!
     try:
-        print(f"🔗 [1단계] 영어 퍼머링크 생성 중... (Target URL: /{slug}.html)")
+        print(f"🔗 [1단계] 영어 퍼머링크 강제 획득 중... (Target URL: /{slug}.html)")
         res_insert = blogger.posts().insert(
             blogId=BLOG_ID, 
             body={
                 'title': slug, 
                 'content': final_html, 
-                'labels': tags, 
-                'published': scheduled_pub_time
+                'labels': tags
+                # ★ 핵심: 여기에 published를 안 넣어야 즉시 라이브로 주소가 예쁘게 굳음!
             }, 
             isDraft=False
         ).execute()
         
         created_post_id = res_insert.get('id')
         
-        # 구글 서버 DB 인덱싱 안전 대기
+        # 구글 DB 인덱싱 안전 대기
         time.sleep(1.5)
         
-        print(f"✍️ [2단계] 한글 정식 제목으로 덮어쓰기 중... ('{title}')")
+        print(f"✍️ [2단계] 한글 제목 및 미래 예약시간({scheduled_pub_time}) 덮어쓰기 중...")
         blogger.posts().patch(
             blogId=BLOG_ID, 
             postId=created_post_id, 
             body={
                 'title': title,
-                'content': final_html, # 구글 서버의 본문 삭제 버그 강제 차단
+                'content': final_html, # 본문 증발 버그 방어
                 'labels': tags,
-                'published': scheduled_pub_time
+                'published': scheduled_pub_time # ★ 여기에 예약 시간을 얹어 유배 보냄
             }
         ).execute()
 
