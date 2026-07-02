@@ -197,10 +197,11 @@ def calculate_scheduled_time():
     kst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(kst) + datetime.timedelta(minutes=5) 
     today = now.date()
-    candidates = [datetime.datetime.combine(today, datetime.time(h, random.randint(1, 15)), tzinfo=kst) for h in [9, 11, 13, 15, 17, 19, 21]]
+    # [수정] 하루 2회 발행: 오전 10시 / 저녁 7시
+    candidates = [datetime.datetime.combine(today, datetime.time(h, random.randint(1, 15)), tzinfo=kst) for h in [10, 19]]
     scheduled_time = next((c for c in candidates if c > now), None)
     if not scheduled_time:
-        scheduled_time = datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time(9, random.randint(1, 15)), tzinfo=kst)
+        scheduled_time = datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time(10, random.randint(1, 15)), tzinfo=kst)
     return scheduled_time.strftime('%Y-%m-%dT%H:%M:%S+09:00')
 
 def generate_blog_content(target_keyword):
@@ -256,7 +257,8 @@ def check_already_posted(blogger, blog_id):
     try:
         posts = blogger.posts().list(blogId=blog_id, maxResults=10).execute()
         count = sum(1 for item in posts.get('items', []) if item.get('published', '').startswith(now.strftime('%Y-%m-%d')))
-        if count >= 4: return True
+        # [수정] 하루 2회 발행 상한
+        if count >= 2: return True
     except: pass
     return False
 
