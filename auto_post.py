@@ -177,6 +177,55 @@ def format_paragraphs(text):
         processed_chunks.append("".join(table_html))
     return "".join(processed_chunks)
 
+# [신규] 목차(TOC) 박스 생성
+def build_toc_html(sub1, sub2, sub3):
+    return f'''
+<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:20px 24px; margin:25px 0;">
+    <p style="font-weight:700; font-size:15px; color:#1e293b; margin:0 0 12px 0;">📋 목차</p>
+    <ul style="margin:0; padding-left:20px; font-size:14px; color:#334155; line-height:2;">
+        <li><a href="#sec1" style="color:#2563eb; text-decoration:none;">{sub1}</a></li>
+        <li><a href="#sec2" style="color:#2563eb; text-decoration:none;">{sub2}</a></li>
+        <li><a href="#sec3" style="color:#2563eb; text-decoration:none;">{sub3}</a></li>
+        <li><a href="#faq" style="color:#2563eb; text-decoration:none;">자주 묻는 질문</a></li>
+        <li><a href="#conclusion" style="color:#2563eb; text-decoration:none;">결론</a></li>
+    </ul>
+</div>
+'''
+
+# [신규] 섹션별 "✅ 요약" 박스
+def make_section_summary(text):
+    if not text or not text.strip(): return ""
+    return f'''
+<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 18px; margin:15px 0 30px 0;">
+    <p style="margin:0; font-size:14px; color:#1e3a8a; font-weight:700;">✅ 요약</p>
+    <p style="margin:6px 0 0 0; font-size:14px; color:#334155; line-height:1.6;">{text}</p>
+</div>
+'''
+
+# [신규] FAQ 섹션
+def build_faq_html(faq_list):
+    if not faq_list: return ""
+    items = ""
+    for item in faq_list:
+        q = (item.get("question") or "").strip()
+        a = (item.get("answer") or "").strip()
+        if not q or not a: continue
+        items += f'''
+        <div style="margin-bottom:18px;">
+            <p style="font-weight:700; font-size:15px; color:#1e293b; margin:0 0 6px 0;">Q. {q}</p>
+            <p style="font-size:14px; color:#475569; line-height:1.7; margin:0;">A. {a}</p>
+        </div>'''
+    if not items: return ""
+    return f'''
+<h2 id="faq" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:45px;">자주 묻는 질문</h2>
+<div style="margin-top:20px;">{items}</div>
+'''
+
+# [신규] 결론 섹션
+def build_conclusion_html(conclusion_text):
+    if not conclusion_text or not conclusion_text.strip(): return ""
+    return f'<h2 id="conclusion" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:45px;">결론</h2>{format_paragraphs(conclusion_text)}'
+
 def get_unique_target_keyword(blogger, blog_id):
     recent_titles = []
     try:
@@ -208,7 +257,7 @@ def generate_blog_content(target_keyword):
     api_key_direct = os.environ.get("API_KEY")
     client = genai.Client(api_key=api_key_direct, http_options=types.HttpOptions(api_version="v1beta"))
     
-    # [핵심 개편] 본문 분량 2배 강화 지침 및 한글 요약본으로 수정
+    # [핵심 개편] 목차/섹션별요약/FAQ/결론 구조 추가 + 본문 분량 강화 지침
     prompt = (
         "너는 10년 차 전업 투자자이자 구독자 10만 명의 경제 전문 블로거야. "
         f"[{target_keyword}]에 대해 검색한 사용자가 체류 시간을 길게 유지할 수 있도록 '고밀도 정보성 칼럼'을 작성해줘.\n\n"
@@ -216,21 +265,36 @@ def generate_blog_content(target_keyword):
         "1. [제목]: 핵심 키워드가 맨 앞에 오도록 배치하고 클릭률을 높이는 구체적인 이득을 명시하라. (예: '주식 예수금 뜻과 출금 가능 시간 완벽 정리')\n"
         "2. [분량 및 깊이 강화]: 블로그 상위 노출을 위해 각 소제목 본문(body_1, body_2, body_3)은 각각 최소 450자~600자 이상으로 매우 길고 상세하게 작성하라. 원리 설명뿐만 아니라 '실제 투자 상황에서의 예시'를 반드시 포함하라.\n"
         "3. [모바일 가독성]: 문장은 25자 내외로 호흡을 짧게 끊고 접속사는 삭제하라. 정보 나열은 글머리기호(-, 1. 2.)를 쓰고 비교 분석은 마크다운 표(|제목|내용|)로 구현하라.\n"
-        "4. [한글 핵심 요약]: global_summary 항목에는 영어 대신 '바쁜 현대인을 위한 핵심 요약 3줄'을 한글로 작성하라.\n"
-        "5. [금지어]: '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략' 절대 금지.\n"
-        "6. [URL 슬러그 생성]: 이 글의 웹 주소(URL)로 쓸 금융/주식 관련 소문자 영어 단어 2~3개를 하이픈(-)으로 연결하여 'slug' 값에 작성하라. (예: 'stock-beginner-guide')\n\n"
+        "4. [인트로]: intro 항목에는 이 글을 왜 읽어야 하는지, 어떤 고민을 해결해주는지 3~4문장으로 자연스럽게 작성하라.\n"
+        "5. [한글 핵심 요약]: global_summary 항목에는 영어 대신 '바쁜 현대인을 위한 핵심 요약 3줄'을 한글로 작성하라.\n"
+        "6. [섹션별 요약]: summary_1, summary_2, summary_3에는 각 섹션 내용을 2줄(60~80자)로 압축한 핵심 요약을 작성하라. 본문을 그대로 반복하지 말고 결론만 짚어라.\n"
+        "7. [FAQ]: faq 항목에는 이 주제에 대해 독자들이 실제로 궁금해할 만한 질문 4개와 각 답변(2~3문장)을 작성하라.\n"
+        "8. [결론]: conclusion 항목에는 전체 내용을 마무리하는 문단(200~300자)을 작성하라. 핵심 포인트 재확인 + 실천 조언으로 끝내라.\n"
+        "9. [금지어]: '파소나', 'PASONA', '카피라이팅', 'AI', '인공지능', '자동화', '프로그램', '단계별 전략' 절대 금지.\n"
+        "10. [URL 슬러그 생성]: 이 글의 웹 주소(URL)로 쓸 금융/주식 관련 소문자 영어 단어 2~3개를 하이픈(-)으로 연결하여 'slug' 값에 작성하라. (예: 'stock-beginner-guide')\n\n"
         "반드시 아래의 JSON 규격에 맞춰서 작성하고, JSON 데이터 외에 다른 설명 텍스트나 마크다운 문법은 일절 출력하지 마라.\n"
         "{\n"
         '  "title": "한글 SEO 최적화 제목",\n'
         '  "slug": "stock-beginner-guide",\n'
+        '  "intro": "글을 시작하는 인트로 3~4문장",\n'
         '  "global_summary": "한글 핵심 요약 3줄 내용",\n'
         '  "tags": ["주식투자", "재테크", "관련키워드"],\n'
         '  "sub_title_1": "1단계 소제목 (개념 완벽 이해하기)",\n'
         '  "body_1": "1단계 본문 내용 (최소 450자 이상 길고 상세하게 작성)",\n'
+        '  "summary_1": "1단계 핵심 요약 2줄",\n'
         '  "sub_title_2": "2단계 소제목 (실전 투자에서의 주의점 분석)",\n'
         '  "body_2": "2단계 본문 내용 (비교 분석용 마크다운 표 반드시 삽입 및 상세 설명)",\n'
+        '  "summary_2": "2단계 핵심 요약 2줄",\n'
         '  "sub_title_3": "3단계 소제목 (전업 투자자의 실천 팁)",\n'
-        '  "body_3": "3단계 본문 내용 (구체적인 대응 매뉴얼 상세 제시)"\n'
+        '  "body_3": "3단계 본문 내용 (구체적인 대응 매뉴얼 상세 제시)",\n'
+        '  "summary_3": "3단계 핵심 요약 2줄",\n'
+        '  "faq": [\n'
+        '    {"question": "질문1", "answer": "답변1"},\n'
+        '    {"question": "질문2", "answer": "답변2"},\n'
+        '    {"question": "질문3", "answer": "답변3"},\n'
+        '    {"question": "질문4", "answer": "답변4"}\n'
+        '  ],\n'
+        '  "conclusion": "전체 내용을 마무리하는 결론 문단"\n'
         "}"
     )
     
@@ -291,17 +355,23 @@ def main():
 
     title = data.get("title", f"{target_keyword} 핵심 가이드")
     tags = data.get("tags", ["주식투자", "재테크"])
+    intro = data.get("intro", "")
     
     sub1 = data.get("sub_title_1", "투자 핵심 전략 1")
     body1 = data.get("body_1", "")
+    summary_1 = data.get("summary_1", "")
     
     sub2 = data.get("sub_title_2", "투자 핵심 전략 2")
     body2 = data.get("body_2", "")
+    summary_2 = data.get("summary_2", "")
     
     sub3 = data.get("sub_title_3", "투자 핵심 전략 3")
     body3 = data.get("body_3", "")
+    summary_3 = data.get("summary_3", "")
     
     global_summary = data.get("global_summary", "")
+    faq_list = data.get("faq", [])
+    conclusion = data.get("conclusion", "")
 
     raw_slug = data.get("slug", "stock-investment-guide").lower()
     slug = re.sub(r'[^a-z0-9\-]', '', raw_slug).strip('-')
@@ -312,18 +382,22 @@ def main():
         raise ValueError(f"🚨 본문 실종 에러! 껍데기 파싱은 성공했으나 본문 내용이 비어있습니다.\n[body1]: {body1}\n[body2]: {body2}")
 
     gs_html = format_paragraphs(global_summary) if global_summary else ""
-    
-    # [수정] 영문 표기 박스 -> 한글 '💡 핵심 요약' 박스로 변경
-    summary_box = f'<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:18px; margin:20px 0; border-radius:0 8px 8px 0;"><p style="margin:0 0 8px 0; font-size:14px; font-weight:bold; color:#1e40af;">💡 핵심 요약</p><div style="font-size:14px; color:#334155;">{gs_html}</div></div>' if gs_html else ""
-    
-    final_html = get_image_tag() + summary_box + ADSENSE_CODE + \
+    overview_summary_html = f'<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:18px; margin:20px 0; border-radius:0 8px 8px 0;"><p style="margin:0 0 8px 0; font-size:14px; font-weight:bold; color:#1e40af;">💡 핵심 요약</p><div style="font-size:14px; color:#334155;">{gs_html}</div></div>' if gs_html else ""
+
+    toc_html = build_toc_html(sub1, sub2, sub3)
+    intro_html = format_paragraphs(intro) if intro else ""
+    faq_html = build_faq_html(faq_list)
+    conclusion_html = build_conclusion_html(conclusion)
+
+    final_html = get_image_tag() + toc_html + intro_html + overview_summary_html + ADSENSE_CODE + \
                  get_image_tag() + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub1}</h3>{format_paragraphs(body1)}' + \
+                 f'<h3 id="sec1" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub1}</h3>{format_paragraphs(body1)}{make_section_summary(summary_1)}' + \
                  CALCULATOR_BOARD_CODE + \
                  get_image_tag() + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub2}</h3>{format_paragraphs(body2)}' + \
+                 f'<h3 id="sec2" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub2}</h3>{format_paragraphs(body2)}{make_section_summary(summary_2)}' + \
                  get_image_tag() + \
-                 f'<h3 style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub3}</h3>{format_paragraphs(body3)}' + ADSENSE_CODE + CTA_CODE
+                 f'<h3 id="sec3" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub3}</h3>{format_paragraphs(body3)}{make_section_summary(summary_3)}' + \
+                 faq_html + ADSENSE_CODE + conclusion_html + CTA_CODE
 
     scheduled_pub_time = calculate_scheduled_time()
 
