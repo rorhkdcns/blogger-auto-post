@@ -111,30 +111,30 @@ ADSENSE_CODE = """
 
 CTA_CODE = """
 <div class="cta-box" style="border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; background-color: #f8fafc; margin-top: 40px; text-align: center;">
-    <p style="font-size: 15px; color: #334155; font-weight: 700; margin-bottom: 8px; display: inline-block; background: #e2e8f0; padding: 4px 12px; border-radius: 6px;">💡 투자자 가이드 안내</p>
-    <p style="font-size: 14px; color: #475569; line-height: 1.7; margin: 0 0 15px 0; font-weight: 500;">
+    <p style="font-size: 17px; color: #334155; font-weight: 700; margin-bottom: 8px; display: inline-block; background: #e2e8f0; padding: 4px 12px; border-radius: 6px;">💡 투자자 가이드 안내</p>
+    <p style="font-size: 16px; color: #475569; line-height: 1.7; margin: 0 0 15px 0; font-weight: 500;">
         시장 변동성이 커질수록 감정에 치우친 매매보다 객관적인 수치 확인이 중요합니다.<br>
         본문에 배치된 <b>[실시간 주식 계산기 모음판]</b>으로 이동하셔서 본인의 포트폴리오 평단가와 리스크 가이드라인을 간편하게 점검해 보시기 바랍니다.
     </p>
-    <a href="#calc-board-top" style="display: inline-block; background: #334155; color: white; font-weight: bold; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; transition: background 0.2s;">⚡ 실시간 계산기로 이동하기</a>
+    <a href="#calc-board-top" style="display: inline-block; background: #334155; color: white; font-weight: bold; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 16px; transition: background 0.2s;">⚡ 실시간 계산기로 이동하기</a>
 </div>
 """
 
 CALCULATOR_BOARD_CODE = f"""
 <div id="calc-board-top" class="calc-board-container" style="margin: 35px 0; padding: 20px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
-    <p style="margin: 0 0 15px 0; font-size: 16px; font-weight: 700; color: #1e293b; text-align: left; border-left: 4px solid #475569; padding-left: 8px;">📊 실시간 투자 리스크 관리 툴 바로가기</p>
+    <p style="margin: 0 0 15px 0; font-size: 17px; font-weight: 700; color: #1e293b; text-align: left; border-left: 4px solid #475569; padding-left: 8px;">📊 실시간 투자 리스크 관리 툴 바로가기</p>
     <div class="calc-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <a href="{URL_물타기}" target="_blank" style="display: block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 8px; text-align: center; text-decoration: none;">
-            <span style="display: block; font-size: 14px; font-weight: 700; color: #1e40af;">📉 주식 물타기 계산기</span>
+            <span style="display: block; font-size: 16px; font-weight: 700; color: #1e40af;">📉 주식 물타기 계산기</span>
         </a>
         <a href="{URL_손절익절}" target="_blank" style="display: block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 8px; text-align: center; text-decoration: none;">
-            <span style="display: block; font-size: 14px; font-weight: 700; color: #0f766e;">💰 익절/손절 기준 계산기</span>
+            <span style="display: block; font-size: 16px; font-weight: 700; color: #0f766e;">💰 익절/손절 기준 계산기</span>
         </a>
         <a href="{URL_복리}" target="_blank" style="display: block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 8px; text-align: center; text-decoration: none;">
-            <span style="display: block; font-size: 14px; font-weight: 700; color: #4338ca;">📈 연복리 자산 시뮬레이터</span>
+            <span style="display: block; font-size: 16px; font-weight: 700; color: #4338ca;">📈 연복리 자산 시뮬레이터</span>
         </a>
         <a href="{URL_환율}" target="_blank" style="display: block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 8px; text-align: center; text-decoration: none;">
-            <span style="display: block; font-size: 14px; font-weight: 700; color: #334155;">🎯 미국주식 실시간 환율 계산</span>
+            <span style="display: block; font-size: 16px; font-weight: 700; color: #334155;">🎯 미국주식 실시간 환율 계산</span>
         </a>
     </div>
 </div>
@@ -163,7 +163,7 @@ def format_paragraphs(text):
                 in_table = True
                 table_html = ['<div style="overflow-x:auto; margin: 20px 0;"><table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1;">']
             if not re.match(r'^\|(?:[\s\-:]+\|)+$', line):
-                tds = ''.join([f'<td style="border:1px solid #cbd5e1; padding:10px; font-size:14px;">{c.strip()}</td>' for c in line.split('|')[1:-1]])
+                tds = ''.join([f'<td style="border:1px solid #cbd5e1; padding:10px; font-size:16px;">{c.strip()}</td>' for c in line.split('|')[1:-1]])
                 table_html.append(f'<tr>{tds}</tr>')
         else:
             if in_table:
@@ -171,7 +171,7 @@ def format_paragraphs(text):
                 table_html.append('</table></div>')
                 processed_chunks.append("".join(table_html))
                 table_html = []
-            processed_chunks.append(f'<p style="margin-bottom:20px; line-height:1.7; font-size:15px; color:#334155;">{line}</p>')
+            processed_chunks.append(f'<p style="margin-bottom:20px; line-height:1.7; font-size:17px; color:#334155;">{line}</p>')
     if in_table:
         table_html.append('</table></div>')
         processed_chunks.append("".join(table_html))
@@ -181,8 +181,8 @@ def format_paragraphs(text):
 def build_toc_html(sub1, sub2, sub3):
     return f'''
 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:20px 24px; margin:25px 0;">
-    <p style="font-weight:700; font-size:15px; color:#1e293b; margin:0 0 12px 0;">📋 목차</p>
-    <ul style="margin:0; padding-left:20px; font-size:14px; color:#334155; line-height:2;">
+    <p style="font-weight:700; font-size:17px; color:#1e293b; margin:0 0 12px 0;">📋 목차</p>
+    <ul style="margin:0; padding-left:20px; font-size:16px; color:#334155; line-height:2;">
         <li><a href="#sec1" style="color:#2563eb; text-decoration:none;">{sub1}</a></li>
         <li><a href="#sec2" style="color:#2563eb; text-decoration:none;">{sub2}</a></li>
         <li><a href="#sec3" style="color:#2563eb; text-decoration:none;">{sub3}</a></li>
@@ -197,8 +197,8 @@ def make_section_summary(text):
     if not text or not text.strip(): return ""
     return f'''
 <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 18px; margin:15px 0 30px 0;">
-    <p style="margin:0; font-size:14px; color:#1e3a8a; font-weight:700;">✅ 요약</p>
-    <p style="margin:6px 0 0 0; font-size:14px; color:#334155; line-height:1.6;">{text}</p>
+    <p style="margin:0; font-size:16px; color:#1e3a8a; font-weight:700;">✅ 요약</p>
+    <p style="margin:6px 0 0 0; font-size:16px; color:#334155; line-height:1.6;">{text}</p>
 </div>
 '''
 
@@ -212,19 +212,19 @@ def build_faq_html(faq_list):
         if not q or not a: continue
         items += f'''
         <div style="margin-bottom:18px;">
-            <p style="font-weight:700; font-size:15px; color:#1e293b; margin:0 0 6px 0;">Q. {q}</p>
-            <p style="font-size:14px; color:#475569; line-height:1.7; margin:0;">A. {a}</p>
+            <p style="font-weight:700; font-size:17px; color:#1e293b; margin:0 0 6px 0;">Q. {q}</p>
+            <p style="font-size:16px; color:#475569; line-height:1.7; margin:0;">A. {a}</p>
         </div>'''
     if not items: return ""
     return f'''
-<h2 id="faq" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:45px;">자주 묻는 질문</h2>
+<h2 id="faq" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:45px; font-size:21px;">자주 묻는 질문</h2>
 <div style="margin-top:20px;">{items}</div>
 '''
 
 # [신규] 결론 섹션
 def build_conclusion_html(conclusion_text):
     if not conclusion_text or not conclusion_text.strip(): return ""
-    return f'<h2 id="conclusion" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:45px;">결론</h2>{format_paragraphs(conclusion_text)}'
+    return f'<h2 id="conclusion" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:45px; font-size:21px;">결론</h2>{format_paragraphs(conclusion_text)}'
 
 def get_unique_target_keyword(blogger, blog_id):
     recent_titles = []
@@ -382,7 +382,7 @@ def main():
         raise ValueError(f"🚨 본문 실종 에러! 껍데기 파싱은 성공했으나 본문 내용이 비어있습니다.\n[body1]: {body1}\n[body2]: {body2}")
 
     gs_html = format_paragraphs(global_summary) if global_summary else ""
-    overview_summary_html = f'<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:18px; margin:20px 0; border-radius:0 8px 8px 0;"><p style="margin:0 0 8px 0; font-size:14px; font-weight:bold; color:#1e40af;">💡 핵심 요약</p><div style="font-size:14px; color:#334155;">{gs_html}</div></div>' if gs_html else ""
+    overview_summary_html = f'<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:18px; margin:20px 0; border-radius:0 8px 8px 0;"><p style="margin:0 0 8px 0; font-size:15px; font-weight:bold; color:#1e40af;">💡 핵심 요약</p><div style="font-size:16px; color:#334155;">{gs_html}</div></div>' if gs_html else ""
 
     toc_html = build_toc_html(sub1, sub2, sub3)
     intro_html = format_paragraphs(intro) if intro else ""
@@ -391,12 +391,12 @@ def main():
 
     final_html = get_image_tag() + toc_html + intro_html + overview_summary_html + ADSENSE_CODE + \
                  get_image_tag() + \
-                 f'<h3 id="sec1" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub1}</h3>{format_paragraphs(body1)}{make_section_summary(summary_1)}' + \
+                 f'<h3 id="sec1" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px; font-size:20px;">{sub1}</h3>{format_paragraphs(body1)}{make_section_summary(summary_1)}' + \
                  CALCULATOR_BOARD_CODE + \
                  get_image_tag() + \
-                 f'<h3 id="sec2" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub2}</h3>{format_paragraphs(body2)}{make_section_summary(summary_2)}' + \
+                 f'<h3 id="sec2" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px; font-size:20px;">{sub2}</h3>{format_paragraphs(body2)}{make_section_summary(summary_2)}' + \
                  get_image_tag() + \
-                 f'<h3 id="sec3" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px;">{sub3}</h3>{format_paragraphs(body3)}{make_section_summary(summary_3)}' + \
+                 f'<h3 id="sec3" style="border-left:5px solid #3b82f6; padding-left:10px; margin-top:35px; font-size:20px;">{sub3}</h3>{format_paragraphs(body3)}{make_section_summary(summary_3)}' + \
                  faq_html + ADSENSE_CODE + conclusion_html + CTA_CODE
 
     scheduled_pub_time = calculate_scheduled_time()
