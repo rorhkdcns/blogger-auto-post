@@ -1,29 +1,23 @@
 name: 블로그 주식 자동 포스팅
-
 on:
   schedule:
-    # 💡 깃허브 액션은 UTC(세계 표준시) 기준이라 한국 시간(KST)에서 9시간을 뺀 시간으로 설정합니다.
-    - cron: '0 0 * * *'   # UTC 00:00 = 한국 시간 오전 09:00
-    - cron: '0 4 * * *'   # UTC 04:00 = 한국 시간 오후 01:00 (13시)
-    - cron: '0 7 * * *'   # UTC 07:00 = 한국 시간 오후 04:00 (16시)
-    - cron: '0 11 * * *'  # UTC 11:00 = 한국 시간 저녁 08:00 (20시)
-  
-  # 💡 [Run workflow] 수동 클릭 버튼도 사라지지 않게 그대로 유지합니다.
+    # 깃허브 액션은 UTC 기준. 한국 시간(KST) = UTC + 9시간
+    - cron: '0 1 * * *'   # UTC 01:00 = 한국 오전 10:00 (본 실행)
+    - cron: '0 5 * * *'   # UTC 05:00 = 한국 오후 02:00 (실패 시 재시도용)
+
+  # [Run workflow] 수동 클릭 버튼 유지
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository code
       uses: actions/checkout@v4
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-
     - name: Run Auto Post Script
       env:
         API_KEY: ${{ secrets.API_KEY }}
