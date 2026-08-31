@@ -463,7 +463,7 @@ def main():
 
     try:
         clean_json = ai_json_response.replace('```json', '').replace('```', '').strip()
-        data = json.loads(clean_json)
+        data = json.loads(clean_json, strict=False)
     except Exception as e:
         raise ValueError(
             f"🚨 JSON 파싱 실패! AI가 규격을 어겼습니다.\n[에러]: {e}\n[AI 원본]:\n{ai_json_response[:500]}"
